@@ -22,8 +22,8 @@ def get_user_info(username):
 
     return response.json()
 
-# --- ChatGPT風 要約生成関数（Assistants API使用、sk-saトークン対応） ---
-def summarize_with_assistant(text, url):
+# --- ChatGPT風 要約生成関数（sk-saトークンにも対応） ---
+def summarize_with_raw_http(text, url):
     prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
 
 本文:
@@ -34,58 +34,30 @@ URL: {url}
 
     headers = {
         "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",
-        "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v1"
+        "Content-Type": "application/json"
     }
 
-    # --- Assistant IDを環境変数やsecretsに登録しておく必要あり ---
-    assistant_id = st.secrets.get("OPENAI_ASSISTANT_ID")
+    data = {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {"role": "system", "content": "あなたはSNS投稿のプロです。"},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 200
+    }
 
-    # --- Thread作成 ---
-    thread_res = requests.post(
-        "https://api.openai.com/v1/threads",
-        headers=headers
-    )
-    thread_id = thread_res.json().get("id")
-
-    # --- ユーザーメッセージを送信 ---
-    msg_res = requests.post(
-        f"https://api.openai.com/v1/threads/{thread_id}/messages",
-        headers=headers,
-        json={"role": "user", "content": prompt}
-    )
-
-    # --- Run作成 ---
-    run_res = requests.post(
-        f"https://api.openai.com/v1/threads/{thread_id}/runs",
-        headers=headers,
-        json={"assistant_id": assistant_id}
-    )
-    run_id = run_res.json().get("id")
-
-    # --- ステータス確認ループ ---
-    while True:
-        status_res = requests.get(
-            f"https://api.openai.com/v1/threads/{thread_id}/runs/{run_id}",
-            headers=headers
+    try:
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=data
         )
-        status = status_res.json().get("status")
-        if status == "completed":
-            break
-        elif status == "failed":
-            return "アシスタント実行に失敗しました。"
-        time.sleep(1)
-
-    # --- 結果取得 ---
-    msg_list_res = requests.get(
-        f"https://api.openai.com/v1/threads/{thread_id}/messages",
-        headers=headers
-    )
-    messages = msg_list_res.json().get("data", [])
-    for msg in messages:
-        if msg["role"] == "assistant":
-            return msg["content"][0]["text"]["value"].strip()
-    return "アシスタントの応答が取得できませんでした。"
+        response.raise_for_status()
+        content = response.json()["choices"][0]["message"]["content"].strip()
+        return content
+    except requests.exceptions.RequestException as e:
+        return f"エラーが発生しました: {e}"
 
 # --- カードスタイルCSS ---
 st.markdown("""
@@ -160,7 +132,7 @@ with tabs[0]:
         st.experimental_rerun()
 
 with tabs[1]:
-    st.subheader("X投稿用 要約生成（ChatGPT API：Assistant）")
+    st.subheader("X投稿用 要約生成（ChatGPT API）")
 
     url_input = st.text_input("関連URL", placeholder="https://...")
     text_input = st.text_area("本文（長文OK）", height=200, placeholder="記事の内容や要点をここに入力")
@@ -170,8 +142,12 @@ with tabs[1]:
             st.warning("本文を入力してください。")
         else:
             with st.spinner("要約生成中..."):
-                result = summarize_with_assistant(text_input, url_input)
+                result = summarize_with_raw_http(text_input, url_input)
                 st.success("要約が完了しました！")
                 st.text_area("生成された投稿文（140字以内）", result, height=120)
 
-                if st.button("Xに投稿する（
+                if st.button("Xに投稿する（ダミー）"):
+                    st.info("※ 実際の投稿機能は未実装です。")
+
+with tabs[2]:
+    st.info("別の分析機能を追加予定（例：ツイート内容の分類など）")
