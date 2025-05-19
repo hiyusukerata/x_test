@@ -22,6 +22,33 @@ def get_user_info(username):
     
     return response.json()
 
+# --- AI要約関数 ---
+import openai
+openai.api_key = "sk-sa-articlerevenuereport-gensummary-FLe6FVweNeFsIWem67AtT3BlbkFJBdwej7dol31lDgTrHSmj"
+
+def summarize_text(text, url):
+    prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
+
+本文:
+{text}
+
+URL: {url}
+"""
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "あなたはSNS投稿のプロです。"},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=200
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"エラーが発生しました: {e}"
+
+
 # --- カードスタイルCSS ---
 st.markdown("""
 <style>
@@ -95,7 +122,23 @@ with tabs[0]:
         st.experimental_rerun()
 
 with tabs[1]:
-    st.info("ここに今後の拡張機能（例：過去推移グラフ、リスト取得など）を追加予定です")
+    st.subheader("X投稿用 要約生成（ChatGPT）")
+
+    url_input = st.text_input("関連URL", placeholder="https://...")
+    text_input = st.text_area("本文（長文OK）", height=200, placeholder="記事の内容や要点をここに入力")
+
+    if st.button("要約を生成"):
+        if not text_input.strip():
+            st.warning("本文を入力してください。")
+        else:
+            with st.spinner("要約生成中..."):
+                result = summarize_text(text_input, url_input)
+                st.success("要約が完了しました！")
+                st.text_area("生成された投稿文（140字以内）", result, height=120)
+
+                if st.button("Xに投稿する（ダミー）"):
+                    st.info("※ 実際の投稿機能は未実装です。")
+
 
 with tabs[2]:
     st.info("別の分析機能を追加予定（例：ツイート内容の分類など）")
