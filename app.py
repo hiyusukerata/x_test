@@ -1,13 +1,13 @@
 import streamlit as st
 import requests
-import openai
+from openai import OpenAI
 from datetime import datetime
 import time
 
 # --- セットアップ ---
 BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANpT1wEAAAAAdsiy7QKu48ZE2ECpAeiHF3jXX%2FQ%3Dh6E0IKyk970kbBOs4dTgOGkL8pyunmPHn5shLhVx671EHydlMy"
 HEADERS = {"Authorization": f"Bearer {BEARER_TOKEN}"}
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # --- API取得関数（キャッシュあり） ---
 @st.cache_data(ttl=3600)
@@ -24,7 +24,7 @@ def get_user_info(username):
 
     return response.json()
 
-# --- ChatGPT要約生成関数 ---
+# --- ChatGPT要約生成関数（OpenAI v1.0対応） ---
 def summarize_text(text, url):
     prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
 
@@ -34,7 +34,7 @@ def summarize_text(text, url):
 URL: {url}
 """
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "あなたはSNS投稿のプロです。"},
