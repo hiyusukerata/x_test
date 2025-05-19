@@ -24,7 +24,9 @@ def get_user_info(username):
 
 # --- AI要約関数 ---
 import openai
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+from openai import OpenAI
+
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])  # または openai.api_key を設定して client=None にする
 
 def summarize_text(text, url):
     prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
@@ -35,8 +37,8 @@ def summarize_text(text, url):
 URL: {url}
 """
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
+        response = client.chat.completions.create(
+            model="gpt-4",  # または "gpt-3.5-turbo"
             messages=[
                 {"role": "system", "content": "あなたはSNS投稿のプロです。"},
                 {"role": "user", "content": prompt}
@@ -47,7 +49,6 @@ URL: {url}
         return response.choices[0].message.content.strip()
     except Exception as e:
         return f"エラーが発生しました: {e}"
-
 
 # --- カードスタイルCSS ---
 st.markdown("""
