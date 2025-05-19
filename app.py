@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # --- 設定 ---
-BEARER_TOKEN = "YOUR_BEARER_TOKEN_HERE"  # Secretsにするのがベスト
+BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANpT1wEAAAAArmiG8K0ghycEIT8bYckrgVx4TTA%3D2q5K0tIQWJznXpV9LudrPGFiXsOYuBOBs49SOuZCFB57E5UwIf"  # Secretsにするのがベスト
 BASE_URL = "https://api.twitter.com/2/users/by/username/"
 
 # --- ヘッダー定義 ---
