@@ -23,12 +23,12 @@ def get_user_info(username):
     return response.json()
 
 # --- AI要約関数 ---
-import openai
-from openai import OpenAI
+import streamlit as st
+import requests
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])  # または openai.api_key を設定して client=None にする
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
-def summarize_text(text, url):
+def summarize_with_raw_http(text, url):
     prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
 
 本文:
@@ -36,18 +36,32 @@ def summarize_text(text, url):
 
 URL: {url}
 """
+
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {"role": "system", "content": "あなたはSNS投稿のプロです。"},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 200
+    }
+
     try:
-        response = client.chat.completions.create(
-            model="gpt-4",  # または "gpt-3.5-turbo"
-            messages=[
-                {"role": "system", "content": "あなたはSNS投稿のプロです。"},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=200
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=data
         )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
+        response.raise_for_status()
+        content = response.json()["choices"][0]["message"]["content"].strip()
+        return content
+    except requests.exceptions.RequestException as e:
         return f"エラーが発生しました: {e}"
 
 # --- カードスタイルCSS ---
@@ -122,24 +136,21 @@ with tabs[0]:
     elif clear:
         st.experimental_rerun()
 
-with tabs[1]:
-    st.subheader("X投稿用 要約生成（ChatGPT）")
+with tab1:
+    with st.form("summary_form"):
+        url = st.text_input("記事のURL")
+        body = st.text_area("本文（長文OK）", height=200)
+        submitted = st.form_submit_button("要約を生成")
 
-    url_input = st.text_input("関連URL", placeholder="https://...")
-    text_input = st.text_area("本文（長文OK）", height=200, placeholder="記事の内容や要点をここに入力")
-
-    if st.button("要約を生成"):
-        if not text_input.strip():
+    if submitted:
+        if not body:
             st.warning("本文を入力してください。")
         else:
             with st.spinner("要約生成中..."):
-                result = summarize_text(text_input, url_input)
-                st.success("要約が完了しました！")
-                st.text_area("生成された投稿文（140字以内）", result, height=120)
+                summary = summarize_with_raw_http(body, url)
+                st.success("要約が生成されました！")
+                st.text_area("生成されたX投稿文（140字以内）", summary, height=120)
+                st.button("Xに投稿する（ダミー）")
 
-                if st.button("Xに投稿する（ダミー）"):
-                    st.info("※ 実際の投稿機能は未実装です。")
-
-
-with tabs[2]:
-    st.info("別の分析機能を追加予定（例：ツイート内容の分類など）")
+with tab2:
+    st.info("ここには将来追加する機能を表示予定です。")
