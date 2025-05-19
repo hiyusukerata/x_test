@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # --- 固定設定 ---
-BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANpT1wEAAAAArmiG8K0ghycEIT8bYckrgVx4TTA%3D2q5K0tIQWJznXpV9LudrPGFiXsOYuBOBs49SOuZCFB57E5UwIf" 
+BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANpT1wEAAAAAdsiy7QKu48ZE2ECpAeiHF3jXX%2FQ%3Dh6E0IKyk970kbBOs4dTgOGkL8pyunmPHn5shLhVx671EHydlMy" 
 BASE_URL = "https://api.twitter.com/2/users/by/username/"
 HEADERS = {"Authorization": f"Bearer {BEARER_TOKEN}"}
 
