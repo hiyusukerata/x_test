@@ -1,11 +1,13 @@
 import streamlit as st
 import requests
+import openai
 from datetime import datetime
 import time
 
 # --- セットアップ ---
 BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANpT1wEAAAAAdsiy7QKu48ZE2ECpAeiHF3jXX%2FQ%3Dh6E0IKyk970kbBOs4dTgOGkL8pyunmPHn5shLhVx671EHydlMy"
 HEADERS = {"Authorization": f"Bearer {BEARER_TOKEN}"}
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # --- API取得関数（キャッシュあり） ---
 @st.cache_data(ttl=3600)
@@ -22,8 +24,8 @@ def get_user_info(username):
 
     return response.json()
 
-# --- ChatGPT風 要約生成関数（sk-saトークンにも対応） ---
-def summarize_with_raw_http(text, url):
+# --- ChatGPT要約生成関数 ---
+def summarize_text(text, url):
     prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
 
 本文:
@@ -31,32 +33,18 @@ def summarize_with_raw_http(text, url):
 
 URL: {url}
 """
-
-    headers = {
-        "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "model": "gpt-3.5-turbo",
-        "messages": [
-            {"role": "system", "content": "あなたはSNS投稿のプロです。"},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.7,
-        "max_tokens": 200
-    }
-
     try:
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers=headers,
-            json=data
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "あなたはSNS投稿のプロです。"},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=200
         )
-        response.raise_for_status()
-        content = response.json()["choices"][0]["message"]["content"].strip()
-        return content
-    except requests.exceptions.RequestException as e:
+        return response.choices[0].message.content.strip()
+    except Exception as e:
         return f"エラーが発生しました: {e}"
 
 # --- カードスタイルCSS ---
@@ -142,7 +130,7 @@ with tabs[1]:
             st.warning("本文を入力してください。")
         else:
             with st.spinner("要約生成中..."):
-                result = summarize_with_raw_http(text_input, url_input)
+                result = summarize_text(text_input, url_input)
                 st.success("要約が完了しました！")
                 st.text_area("生成された投稿文（140字以内）", result, height=120)
 
