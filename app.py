@@ -24,7 +24,7 @@ def get_user_info(username):
 
 # --- AI要約関数 ---
 import openai
-openai.api_key = "sk-sa-articlerevenuereport-gensummary-FLe6FVweNeFsIWem67AtT3BlbkFJBdwej7dol31lDgTrHSmj"
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def summarize_text(text, url):
     prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
