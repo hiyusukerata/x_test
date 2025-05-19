@@ -55,17 +55,19 @@ URL: {url}
     except Exception as e:
         return f"エラーが発生しました: {e}"
 
-# --- レーダーチャート描画関数（個別表示） ---
+# --- レーダーチャート描画関数（個別表示・正規化あり） ---
 def plot_individual_radar_chart(metrics, label):
     categories = ['フォロワー数', 'フォロー数', 'ツイート数']
     values = [metrics['followers_count'], metrics['following_count'], metrics['tweet_count']]
-    values.append(values[0])
+    max_val = max(values)
+    norm_values = [v / max_val for v in values] if max_val > 0 else [0, 0, 0]
+    norm_values.append(norm_values[0])
     angles = [n / float(len(categories)) * 2 * pi for n in range(len(categories))]
     angles.append(angles[0])
 
     fig, ax = plt.subplots(figsize=(4, 4), subplot_kw=dict(polar=True))
-    ax.plot(angles, values, label=label, color='#1DA1F2')
-    ax.fill(angles, values, alpha=0.3)
+    ax.plot(angles, norm_values, label=label, color='#1DA1F2')
+    ax.fill(angles, norm_values, alpha=0.3)
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(categories)
     ax.set_yticklabels([])
@@ -103,25 +105,23 @@ with tabs[0]:
             metrics2 = user2["public_metrics"]
 
             st.markdown("### 👤 アカウント基本情報")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"**{user1['name']} (@{username1})**")
-                st.markdown(user1.get("description", "(bioなし)"))
-            with col2:
-                st.markdown(f"**{user2['name']} (@{username2})**")
-                st.markdown(user2.get("description", "(bioなし)"))
+            df_info = pd.DataFrame({
+                "項目": ["アカウント名", "ユーザー名", "プロフィール文"],
+                username1: [user1["name"], username1, user1.get("description", "(bioなし)")],
+                username2: [user2["name"], username2, user2.get("description", "(bioなし)")]
+            })
+            st.dataframe(df_info, use_container_width=True, hide_index=True)
 
+            st.markdown("---")
             st.markdown("### 📊 数値比較")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("フォロワー数", f"{metrics1['followers_count']:,}")
-                st.metric("フォロー数", f"{metrics1['following_count']:,}")
-                st.metric("ツイート数", f"{metrics1['tweet_count']:,}")
-            with col2:
-                st.metric("フォロワー数", f"{metrics2['followers_count']:,}")
-                st.metric("フォロー数", f"{metrics2['following_count']:,}")
-                st.metric("ツイート数", f"{metrics2['tweet_count']:,}")
+            df_metrics = pd.DataFrame({
+                "項目": ["フォロワー数", "フォロー数", "ツイート数"],
+                username1: [metrics1['followers_count'], metrics1['following_count'], metrics1['tweet_count']],
+                username2: [metrics2['followers_count'], metrics2['following_count'], metrics2['tweet_count']]
+            })
+            st.dataframe(df_metrics, use_container_width=True, hide_index=True)
 
+            st.markdown("---")
             st.markdown("### 📈 レーダーチャート（アカウント別）")
             col1, col2 = st.columns(2)
             with col1:
