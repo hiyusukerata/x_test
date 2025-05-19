@@ -4,7 +4,7 @@ from datetime import datetime
 import time
 
 # --- セットアップ ---
-BEARER_TOKEN = st.secrets["BEARER_TOKEN"]
+BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANpT1wEAAAAAdsiy7QKu48ZE2ECpAeiHF3jXX%2FQ%3Dh6E0IKyk970kbBOs4dTgOGkL8pyunmPHn5shLhVx671EHydlMy"
 HEADERS = {"Authorization": f"Bearer {BEARER_TOKEN}"}
 
 @st.cache_data(ttl=3600)
