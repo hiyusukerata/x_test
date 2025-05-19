@@ -1,3 +1,121 @@
+
+Github page上でX APIで日別のフォロー/フォロワー数を取得して表示するようにしたい。
+
+GitHubページでX API（旧Twitter API）を使って日別のフォロー/フォロワー数を取得・表示するプロジェクトを作成しましょう。このようなプロジェクトは、ソーシャルメディアの分析や成長追跡に役立ちます。
+
+まず、全体の構成を考えてみましょう：
+
+X APIを使用してフォロー/フォロワー数データを取得
+そのデータを保存して日別の推移を記録
+GitHubページでグラフとして可視化
+このプロジェクトをシンプルに実装するためのコードを作成します。
+
+
+X APIフォロワー追跡ダッシュボード
+インタラクティブアーティファクト 
+作成したX（Twitter）フォロワー追跡ダッシュボードの使い方について説明します：
+
+機能の概要
+X API連携: X（旧Twitter）APIを使用してフォロー数・フォロワー数を取得
+データ保存: 取得したデータをブラウザのローカルストレージに保存
+グラフ表示: Chart.jsを使用して時系列データをグラフ化
+データテーブル: 日別の数値と前日比を表形式で表示
+実装のポイント
+CORS対応: GitHub Pagesからの直接APIアクセスはCORSの問題があるため、例としてプロキシサービスを利用しています
+ローカルストレージ: データはブラウザのローカルストレージに保存され、サーバーには送信されません
+複数アカウント管理: ユーザー名ごとに別々のデータを保存できます
+使用方法
+GitHubリポジトリを作成し、このHTMLファイルを index.html として保存
+GitHub Pagesとして公開（Settings > Pages から設定可能）
+ページにアクセスし、X（Twitter）のユーザー名とBearer Tokenを入力
+「データを取得」ボタンをクリックして最新データを取得・保存
+注意点
+このコードをそのまま使用する場合、X API利用のためには以下が必要です：
+
+X Developer Portalでアプリケーションを作成
+Bearer Tokenを取得（APIキー）
+CORS問題の解決方法として、以下のいずれかを検討：
+独自のバックエンドAPIを作成
+GitHub Actionsを使用して定期的にデータを取得・更新
+この例で使用しているようなCORSプロキシサービスを利用（本番環境では非推奨）
+より安全な方法としては、GitHub Actionsのワークフローを設定して定期的にAPIからデータを取得し、結果をリポジトリに保存する方法がお勧めです。そうすればAPIトークンをGitHubのSecretとして安全に管理できます。
+
+必要に応じてカスタマイズして、ご自身のニーズに合わせてご利用ください。
+
+
+
+
+フォロワー/フォロー数だけでもToken必要？
+
+はい、現在のX（旧Twitter）APIではフォロワー数やフォロー数などの基本的なユーザー情報を取得するだけでも、Bearer Token（APIトークン）が必要です。
+
+X APIの仕様変更（2023年以降）により、以前は公開情報として認証なしでアクセスできた情報でも、現在はAPI認証が必要になっています。これはX社がAPI利用を有料プランに制限するようになったためです。
+
+以下に代替案をいくつか提案します：
+
+1. Web スクレイピングによる方法
+公開プロフィールページからデータを抽出する方法があります。ただし以下の点に注意が必要です：
+
+Xの利用規約ではスクレイピングは制限されている可能性があります
+ページ構造の変更によりスクレイピングコードが動作しなくなる可能性があります
+GitHubページは静的サイトなのでクライアントサイドでのスクレイピングには制限があります
+GitHubページ上でシンプルにデータを手動入力して記録・グラフ化するバージョンを作成しましょう：
+
+
+編集中...
+インタラクティブアーティファクト ∙ バージョン2 
+
+
+
+このBearer Tokenをコード内で固定で使用して、UI上でボックスに入力されたアカウントIDのフォロー数、フォロワー数、投稿数を取得して表示できるようにして。
+
+わかりました。Bearer Tokenを固定で使用して、ユーザーがUIで入力したアカウントIDからフォロー数、フォロワー数、投稿数を取得・表示するようにコードを修正します。
+
+
+X APIフォロワー追跡ダッシュボード
+インタラクティブアーティファクト 
+
+X APIフォロワー追跡ダッシュボード
+インタラクティブアーティファクト 
+
+X APIフォロワー追跡ダッシュボード
+インタラクティブアーティファクト 
+
+X APIフォロワー追跡ダッシュボード
+インタラクティブアーティファクト 
+
+X APIフォロワー追跡ダッシュボード
+インタラクティブアーティファクト 
+コードを修正しました。これでX API（Twitter API）を使って、固定のBearer Tokenでユーザー情報を取得できるようになりました。主な変更点は以下の通りです：
+
+Bearer Tokenを固定で設定:
+javascript
+const BEARER_TOKEN = 'YOUR_BEARER_TOKEN_HERE'; // ここに自分のBearer Tokenを入力
+実際に使用する際は、この部分を自分のBearer Tokenに書き換える必要があります。
+取得するデータの追加:
+フォロワー数
+フォロー数
+ツイート数（新しく追加）
+UI変更:
+手動入力フォームをシンプルなユーザー名入力フォームに変更
+「最終更新日」表示を「ツイート数」表示に変更
+テーブルにツイート数の列を追加
+グラフにツイート数のデータセットを追加（デフォルトでは非表示）
+使い方の説明を更新:
+APIを使った新しい使い方の説明に変更
+注意事項を追加
+使用方法
+コード内の YOUR_BEARER_TOKEN_HERE を実際のX API Bearer Tokenに置き換えます
+GitHubリポジトリの index.html として保存し、GitHub Pagesとして公開
+ページにアクセスして、X
+
+
+
+
+1-click prompts
+
+Web access
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -157,24 +275,12 @@
     
     <div class="container">
         <div class="card">
-            <h2>データ入力</h2>
+            <h2>アカウント情報取得</h2>
             <div class="form-group">
                 <label for="username">X（Twitter）ユーザー名:</label>
                 <input type="text" id="username" placeholder="@なしでユーザー名を入力" required>
             </div>
-            <div class="form-group">
-                <label for="followers">現在のフォロワー数:</label>
-                <input type="number" id="followers" placeholder="フォロワー数を入力" required>
-            </div>
-            <div class="form-group">
-                <label for="following">現在のフォロー数:</label>
-                <input type="number" id="following" placeholder="フォロー数を入力" required>
-            </div>
-            <div class="form-group">
-                <label for="date">日付:</label>
-                <input type="date" id="date" required>
-            </div>
-            <button id="saveBtn">データを保存</button>
+            <button id="fetchBtn">データを取得</button>
             <button id="clearBtn">データをクリア</button>
             <div id="message"></div>
         </div>
@@ -189,8 +295,8 @@
                 <p id="following-count">-</p>
             </div>
             <div class="stat-box">
-                <h3>最終更新日</h3>
-                <p id="last-updated">-</p>
+                <h3>ツイート数</h3>
+                <p id="tweets-count">-</p>
             </div>
         </div>
 
@@ -214,6 +320,7 @@
                                 <th>日付</th>
                                 <th>フォロワー数</th>
                                 <th>フォロー数</th>
+                                <th>ツイート数</th>
                                 <th>フォロワー増減</th>
                                 <th>フォロー増減</th>
                             </tr>
@@ -229,15 +336,25 @@
         <div class="info-text">
             <p><strong>使い方:</strong></p>
             <ol>
-                <li>「データ入力」セクションでTwitterのユーザー名、フォロワー数、フォロー数、日付を入力します</li>
-                <li>「データを保存」ボタンをクリックして情報を保存します</li>
-                <li>毎日または定期的にデータを入力して、推移をグラフで確認できます</li>
-                <li>データはブラウザのローカルストレージに保存されます（他のデバイスやブラウザとは同期されません）</li>
+                <li>X（Twitter）のユーザー名を入力します（@は不要）</li>
+                <li>「データを取得」ボタンをクリックしてAPIからデータを取得します</li>
+                <li>取得したデータが自動的にグラフとテーブルに表示されます</li>
+                <li>定期的にデータを取得して推移を確認できます</li>
+                <li>データはブラウザのローカルストレージに保存されます</li>
             </ol>
+            <p><strong>注意事項:</strong></p>
+            <ul>
+                <li>このアプリケーションを使用するには、コード内に有効なBearer Tokenを設定する必要があります</li>
+                <li>X API利用制限に注意してください（現在、無料プランでは月に500リクエストまで）</li>
+                <li>CORSの問題を解決するために、実際の運用ではバックエンドAPIやGitHub Actionsの使用を検討してください</li>
+            </ul>
         </div>
     </div>
 
     <script>
+        // Bearer Tokenを固定値として設定
+        const BEARER_TOKEN = 'YOUR_BEARER_TOKEN_HERE'; // ここに自分のBearer Tokenを入力
+
         // ローカルストレージからデータを取得する関数
         function getStoredData() {
             const username = document.getElementById('username').value.trim();
@@ -252,10 +369,311 @@
             localStorage.setItem(`twitter_stats_${username}`, JSON.stringify(data));
         }
 
-        // 現在の日付を YYYY-MM-DD 形式で設定
-        function setCurrentDate() {
+        // 現在の日付を YYYY-MM-DD 形式で取得
+        function getCurrentDate() {
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            document.getElementById('date').value = `${year}-${month}-${day}
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        // メッセージを表示する関数
+        function showMessage(message, type) {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = message;
+            messageElement.className = type;
+            messageElement.style.display = 'block';
+            
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // チャートを更新する関数
+        let followersChart;
+        function updateChart(historyData) {
+            const ctx = document.getElementById('followersChart').getContext('2d');
+            
+            // データを日付順にソート
+            const sortedData = [...historyData].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            const labels = sortedData.map(entry => entry.date);
+            const followersData = sortedData.map(entry => entry.followers);
+            const followingData = sortedData.map(entry => entry.following);
+            const tweetsData = sortedData.map(entry => entry.tweets);
+            
+            // 既存のチャートがあれば破棄
+            if (followersChart) {
+                followersChart.destroy();
+            }
+            
+            // 新しいチャートを作成
+            followersChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'フォロワー数',
+                            data: followersData,
+                            borderColor: '#1DA1F2',
+                            backgroundColor: 'rgba(29, 161, 242, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'フォロー数',
+                            data: followingData,
+                            borderColor: '#17BF63',
+                            backgroundColor: 'rgba(23, 191, 99, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'ツイート数',
+                            data: tweetsData,
+                            borderColor: '#F45D22',
+                            backgroundColor: 'rgba(244, 93, 34, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.2,
+                            hidden: true // デフォルトでは非表示
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // データテーブルを更新する関数
+        function updateTable(historyData) {
+            const tableBody = document.querySelector('#historyTable tbody');
+            tableBody.innerHTML = '';
+            
+            // データを日付順に逆ソート（最新が上）
+            const sortedData = [...historyData].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedData.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                
+                // 前日との差分を計算
+                let followersDiff = '-';
+                let followingDiff = '-';
+                
+                if (index < sortedData.length - 1) {
+                    const prevEntry = sortedData[index + 1];
+                    followersDiff = entry.followers - prevEntry.followers;
+                    followingDiff = entry.following - prevEntry.following;
+                    
+                    // +/- 記号を追加
+                    followersDiff = (followersDiff > 0 ? '+' : '') + followersDiff;
+                    followingDiff = (followingDiff > 0 ? '+' : '') + followingDiff;
+                }
+                
+                row.innerHTML = `
+                    <td>${entry.date}</td>
+                    <td>${entry.followers.toLocaleString()}</td>
+                    <td>${entry.following.toLocaleString()}</td>
+                    <td>${entry.tweets.toLocaleString()}</td>
+                    <td>${followersDiff}</td>
+                    <td>${followingDiff}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // UI状態を更新する関数
+        function updateStats(userData) {
+            if (!userData || !userData.history || userData.history.length === 0) {
+                document.getElementById('followers-count').textContent = '-';
+                document.getElementById('following-count').textContent = '-';
+                document.getElementById('tweets-count').textContent = '-';
+                return;
+            }
+            
+            // 最新のエントリを取得
+            const latestEntry = [...userData.history].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+            
+            document.getElementById('followers-count').textContent = latestEntry.followers.toLocaleString();
+            document.getElementById('following-count').textContent = latestEntry.following.toLocaleString();
+            document.getElementById('tweets-count').textContent = latestEntry.tweets.toLocaleString();
+        }
+
+        // X APIからユーザーデータを取得する関数
+        async function fetchTwitterData() {
+            const username = document.getElementById('username').value.trim();
+            
+            if (!username) {
+                showMessage('ユーザー名を入力してください', 'error');
+                return;
+            }
+            
+            try {
+                // CORS問題を回避するためにプロキシサービスを使用
+                // 注意: 実際の実装では、自前のバックエンドやGitHub Actionsなどを使うことを推奨
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const apiUrl = `https://api.twitter.com/2/users/by/username/${username}?user.fields=public_metrics`;
+                
+                showMessage('データを取得中...', 'info');
+                
+                const response = await fetch(proxyUrl + apiUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${BEARER_TOKEN}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API エラー: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.data) {
+                    throw new Error('ユーザーが見つかりませんでした');
+                }
+                
+                const followers = data.data.public_metrics.followers_count;
+                const following = data.data.public_metrics.following_count;
+                const tweets = data.data.public_metrics.tweet_count;
+                const currentDate = getCurrentDate();
+                
+                // 既存のデータを取得または新規作成
+                let userData = getStoredData() || { username, history: [] };
+                
+                // 今日のデータがすでにあるか確認
+                const todayEntryIndex = userData.history.findIndex(entry => entry.date === currentDate);
+                
+                if (todayEntryIndex >= 0) {
+                    // 今日のデータを更新
+                    userData.history[todayEntryIndex] = {
+                        date: currentDate,
+                        followers,
+                        following,
+                        tweets
+                    };
+                } else {
+                    // 新しいエントリを追加
+                    userData.history.push({
+                        date: currentDate,
+                        followers,
+                        following,
+                        tweets
+                    });
+                }
+                
+                // データを保存
+                saveData(username, userData);
+                
+                // UI更新
+                updateStats(userData);
+                updateChart(userData.history);
+                updateTable(userData.history);
+                
+                showMessage('データの取得に成功しました', 'success');
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showMessage(`エラー: ${error.message || 'データの取得に失敗しました'}`, 'error');
+            }
+        }
+
+        // データをクリアする関数
+        function clearData() {
+            const username = document.getElementById('username').value.trim();
+            
+            if (!username) {
+                showMessage('クリアするユーザー名を入力してください', 'error');
+                return;
+            }
+            
+            if (confirm(`${username}のすべてのデータを削除してもよろしいですか？`)) {
+                localStorage.removeItem(`twitter_stats_${username}`);
+                
+                // UI要素をリセット
+                document.getElementById('followers-count').textContent = '-';
+                document.getElementById('following-count').textContent = '-';
+                document.getElementById('tweets-count').textContent = '-';
+                
+                if (followersChart) {
+                    followersChart.destroy();
+                    followersChart = null;
+                }
+                
+                document.querySelector('#historyTable tbody').innerHTML = '';
+                
+                showMessage('データが正常にクリアされました', 'success');
+            }
+        }
+
+        // タブ切り替え機能
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    
+                    // アクティブクラスをすべて削除
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // クリックされたタブとコンテンツをアクティブに
+                    button.classList.add('active');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            // イベントリスナーを設定
+            document.getElementById('fetchBtn').addEventListener('click', fetchTwitterData);
+            document.getElementById('clearBtn').addEventListener('click', clearData);
+            
+            // タブ機能を設定
+            setupTabs();
+            
+            // ユーザー名が入力されている場合、保存されたデータを読み込む
+            document.getElementById('username').addEventListener('change', () => {
+                const userData = getStoredData();
+                if (userData) {
+                    updateStats(userData);
+                    updateChart(userData.history);
+                    updateTable(userData.history);
+                }
+            });
+        });
+    </script>
