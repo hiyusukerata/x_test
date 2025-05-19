@@ -1,13 +1,15 @@
 import streamlit as st
 import requests
-from openai import OpenAI
 from datetime import datetime
 import time
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from math import pi
 
 # --- セットアップ ---
 BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANpT1wEAAAAAdsiy7QKu48ZE2ECpAeiHF3jXX%2FQ%3Dh6E0IKyk970kbBOs4dTgOGkL8pyunmPHn5shLhVx671EHydlMy"
 HEADERS = {"Authorization": f"Bearer {BEARER_TOKEN}"}
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # --- API取得関数（キャッシュあり） ---
 @st.cache_data(ttl=3600)
@@ -24,136 +26,76 @@ def get_user_info(username):
 
     return response.json()
 
-# --- ChatGPT要約生成関数（OpenAI v1.0対応） ---
-def summarize_text(text, url):
-    import json
+# --- レーダーチャート描画関数 ---
+def plot_radar_chart(metrics1, metrics2, label1, label2):
+    categories = ['フォロワー数', 'フォロー数', 'ツイート数']
+    values1 = [metrics1['followers_count'], metrics1['following_count'], metrics1['tweet_count']]
+    values2 = [metrics2['followers_count'], metrics2['following_count'], metrics2['tweet_count']]
 
-    prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
+    max_val = max(values1 + values2) * 1.1
+    values1.append(values1[0])
+    values2.append(values2[0])
+    angles = [n / float(len(categories)) * 2 * pi for n in range(len(categories))]
+    angles.append(angles[0])
 
-本文:
-{text}
-
-URL: {url}
-"""
-
-    headers = {
-        "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "model": "gpt-3.5-turbo",
-        "messages": [
-            {"role": "system", "content": "あなたはSNS投稿のプロです。"},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.7,
-        "max_tokens": 200
-    }
-
-    try:
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers=headers,
-            json=data
-        )
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"].strip()
-    except requests.exceptions.HTTPError as e:
-        return f"HTTPエラー: {e.response.status_code} - {e.response.text}"
-    except Exception as e:
-        return f"エラーが発生しました: {e}"
-
-
-# --- カードスタイルCSS ---
-st.markdown("""
-<style>
-.card {
-    padding: 1.5em;
-    border-radius: 10px;
-    background-color: #f5f8fa;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    margin: 10px;
-}
-.card-title {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: #555;
-}
-.card-value {
-    font-size: 1.8em;
-    color: #1DA1F2;
-}
-</style>
-""", unsafe_allow_html=True)
+    fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
+    ax.plot(angles, values1, label=label1)
+    ax.fill(angles, values1, alpha=0.25)
+    ax.plot(angles, values2, label=label2)
+    ax.fill(angles, values2, alpha=0.25)
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories)
+    ax.set_yticklabels([])
+    ax.set_ylim(0, max_val)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    st.pyplot(fig)
 
 # --- タイトルとタブ ---
-st.markdown("<h1 style='color:#1DA1F2;'>X（Twitter）フォロワー追跡</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#1DA1F2;'>X（Twitter）アカウント比較</h1>", unsafe_allow_html=True)
 
-tabs = st.tabs(["アカウント情報", "X投稿用要約生成", "将来の拡張"])
+tabs = st.tabs(["アカウント比較", "X投稿用要約生成", "将来の拡張"])
 
 with tabs[0]:
-    st.subheader("アカウント情報取得")
-    with st.form("user_form"):
-        username = st.text_input("X（Twitter）ユーザー名:", value="GoodAppsbyGMO")
+    st.subheader("Xアカウント情報を比較")
+    with st.form("compare_form"):
         col1, col2 = st.columns(2)
         with col1:
-            submitted = st.form_submit_button("データを取得")
+            username1 = st.text_input("アカウント1のユーザー名", value="GoodAppsbyGMO")
         with col2:
-            clear = st.form_submit_button("データをクリア")
+            username2 = st.text_input("アカウント2のユーザー名", value="OpenAI")
+        submitted = st.form_submit_button("比較する")
 
-    if submitted and username:
-        data = get_user_info(username)
+    if submitted:
+        data1 = get_user_info(username1)
+        data2 = get_user_info(username2)
 
-        if "error" in data:
-            st.error(f"エラー: {data['error']}")
-            if "reset_time" in data:
-                st.warning(f"レート制限は {data['reset_time']} に解除されます。")
-        elif "data" in data:
-            metrics = data["data"]["public_metrics"]
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                st.markdown(f"""
-                <div class='card'>
-                    <div class='card-title'>フォロワー数</div>
-                    <div class='card-value'>{metrics['followers_count']:,}</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with c2:
-                st.markdown(f"""
-                <div class='card'>
-                    <div class='card-title'>フォロー数</div>
-                    <div class='card-value'>{metrics['following_count']:,}</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with c3:
-                st.markdown(f"""
-                <div class='card'>
-                    <div class='card-title'>ツイート数</div>
-                    <div class='card-value'>{metrics['tweet_count']:,}</div>
-                </div>
-                """, unsafe_allow_html=True)
-    elif clear:
-        st.experimental_rerun()
+        if "error" in data1:
+            st.error(f"{username1} の取得エラー: {data1['error']}")
+        if "error" in data2:
+            st.error(f"{username2} の取得エラー: {data2['error']}")
+
+        if "data" in data1 and "data" in data2:
+            metrics1 = data1["data"]["public_metrics"]
+            metrics2 = data2["data"]["public_metrics"]
+
+            st.markdown("### 📊 数値比較")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**{username1}**")
+                st.metric("フォロワー数", f"{metrics1['followers_count']:,}")
+                st.metric("フォロー数", f"{metrics1['following_count']:,}")
+                st.metric("ツイート数", f"{metrics1['tweet_count']:,}")
+            with col2:
+                st.markdown(f"**{username2}**")
+                st.metric("フォロワー数", f"{metrics2['followers_count']:,}")
+                st.metric("フォロー数", f"{metrics2['following_count']:,}")
+                st.metric("ツイート数", f"{metrics2['tweet_count']:,}")
+
+            st.markdown("### 📈 レーダーチャート比較")
+            plot_radar_chart(metrics1, metrics2, username1, username2)
 
 with tabs[1]:
-    st.subheader("X投稿用 要約生成（ChatGPT API）")
-
-    url_input = st.text_input("関連URL", placeholder="https://...")
-    text_input = st.text_area("本文（長文OK）", height=200, placeholder="記事の内容や要点をここに入力")
-
-    if st.button("要約を生成"):
-        if not text_input.strip():
-            st.warning("本文を入力してください。")
-        else:
-            with st.spinner("要約生成中..."):
-                result = summarize_text(text_input, url_input)
-                st.success("要約が完了しました！")
-                st.text_area("生成された投稿文（140字以内）", result, height=120)
-
-                if st.button("Xに投稿する（ダミー）"):
-                    st.info("※ 実際の投稿機能は未実装です。")
+    st.info("要約生成機能はこの後実装します。")
 
 with tabs[2]:
     st.info("別の分析機能を追加予定（例：ツイート内容の分類など）")
