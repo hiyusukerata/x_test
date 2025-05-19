@@ -23,9 +23,9 @@ def get_user_info(username):
     return response.json()
 
 # --- UI ---
-st.title("X（Twitter）フォロワー追跡（キャッシュ＋制限対策）")
+st.title("X（Twitter）フォロワー追跡")
 
-username = st.text_input("X（Twitter）ユーザー名（@なし）を入力", value="hi_ka_yuyu")
+username = st.text_input("X（Twitter）ユーザー名（@なし）を入力", value="GoodAppsbyGMO")
 if st.button("データを取得") and username:
     data = get_user_info(username)
 
