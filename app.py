@@ -14,7 +14,7 @@ HEADERS = {"Authorization": f"Bearer {BEARER_TOKEN}"}
 # --- API取得関数（キャッシュあり） ---
 @st.cache_data(ttl=3600)
 def get_user_info(username):
-    url = f"https://api.twitter.com/2/users/by/username/{username}?user.fields=public_metrics"
+    url = f"https://api.twitter.com/2/users/by/username/{username}?user.fields=public_metrics,description,name"
     response = requests.get(url, headers=HEADERS)
 
     if response.status_code == 429:
@@ -25,6 +25,35 @@ def get_user_info(username):
         return {"error": f"API error: {response.status_code}"}
 
     return response.json()
+
+# --- 要約生成関数（OpenAI Chat API） ---
+def summarize_text(text, url):
+    prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
+
+本文:
+{text}
+
+URL: {url}
+"""
+    headers = {
+        "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {"role": "system", "content": "あなたはSNS投稿のプロです。"},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 200
+    }
+    try:
+        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        return f"エラーが発生しました: {e}"
 
 # --- レーダーチャート描画関数 ---
 def plot_radar_chart(metrics1, metrics2, label1, label2):
@@ -75,18 +104,27 @@ with tabs[0]:
             st.error(f"{username2} の取得エラー: {data2['error']}")
 
         if "data" in data1 and "data" in data2:
-            metrics1 = data1["data"]["public_metrics"]
-            metrics2 = data2["data"]["public_metrics"]
+            user1 = data1["data"]
+            user2 = data2["data"]
+            metrics1 = user1["public_metrics"]
+            metrics2 = user2["public_metrics"]
+
+            st.markdown("### 👤 アカウント基本情報")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**{user1['name']} (@{username1})**")
+                st.markdown(user1.get("description", "(bioなし)"))
+            with col2:
+                st.markdown(f"**{user2['name']} (@{username2})**")
+                st.markdown(user2.get("description", "(bioなし)"))
 
             st.markdown("### 📊 数値比較")
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown(f"**{username1}**")
                 st.metric("フォロワー数", f"{metrics1['followers_count']:,}")
                 st.metric("フォロー数", f"{metrics1['following_count']:,}")
                 st.metric("ツイート数", f"{metrics1['tweet_count']:,}")
             with col2:
-                st.markdown(f"**{username2}**")
                 st.metric("フォロワー数", f"{metrics2['followers_count']:,}")
                 st.metric("フォロー数", f"{metrics2['following_count']:,}")
                 st.metric("ツイート数", f"{metrics2['tweet_count']:,}")
@@ -95,7 +133,21 @@ with tabs[0]:
             plot_radar_chart(metrics1, metrics2, username1, username2)
 
 with tabs[1]:
-    st.info("要約生成機能はこの後実装します。")
+    st.subheader("X投稿用 要約生成（ChatGPT API）")
+    url_input = st.text_input("関連URL", placeholder="https://...")
+    text_input = st.text_area("本文（長文OK）", height=200, placeholder="記事の内容や要点をここに入力")
+
+    if st.button("要約を生成"):
+        if not text_input.strip():
+            st.warning("本文を入力してください。")
+        else:
+            with st.spinner("要約生成中..."):
+                result = summarize_text(text_input, url_input)
+                st.success("要約が完了しました！")
+                st.text_area("生成された投稿文（140字以内）", result, height=120)
+
+                if st.button("Xに投稿する（ダミー）"):
+                    st.info("※ 実際の投稿機能は未実装です。")
 
 with tabs[2]:
     st.info("別の分析機能を追加予定（例：ツイート内容の分類など）")
