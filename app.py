@@ -77,14 +77,13 @@ def plot_relative_chart(scores, label):
     angles += angles[:1]
 
     fig, ax = plt.subplots(figsize=(4.5, 4.5), subplot_kw=dict(polar=True))
-    ax.plot(angles, scores, color='#1DA1F2', linewidth=2, label=label)
+    ax.plot(angles, scores, color='#1DA1F2', linewidth=2)
     ax.fill(angles, scores, color='#1DA1F2', alpha=0.25)
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(categories, fontsize=9)
     ax.set_yticks(range(1, 11))
     ax.set_yticklabels([str(i) for i in range(1, 11)], fontsize=8)
     ax.set_ylim(0, 10)
-    ax.set_title(label, size=11, pad=10)
     return fig
 
 # --- タイトルとタブ ---
@@ -126,8 +125,6 @@ with tabs[0]:
             st.dataframe(df_info, use_container_width=True, hide_index=True)
 
             st.markdown("---")
-
-            st.markdown("### 📈 レーダーチャート（10段階相対スコア）")
             scores1, scores2 = calculate_relative_scores(metrics1, metrics2)
             chart1 = plot_relative_chart(scores1, username1)
             chart2 = plot_relative_chart(scores2, username2)
@@ -137,7 +134,6 @@ with tabs[0]:
             with col2:
                 st.pyplot(chart2)
 
-            st.markdown("---")
             st.markdown("### 📊 数値比較")
             df_metrics = pd.DataFrame({
                 "項目": ["フォロワー数", "フォロー数", "ツイート数"],
