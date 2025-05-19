@@ -26,6 +26,8 @@ def get_user_info(username):
 
 # --- ChatGPT要約生成関数（OpenAI v1.0対応） ---
 def summarize_text(text, url):
+    import json
+
     prompt = f"""以下の本文をもとに、X（旧Twitter）に投稿するための140文字以内の要約文を日本語で作成してください。URLも含めて制限内でお願いします。
 
 本文:
@@ -33,19 +35,35 @@ def summarize_text(text, url):
 
 URL: {url}
 """
+
+    headers = {
+        "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {"role": "system", "content": "あなたはSNS投稿のプロです。"},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 200
+    }
+
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "あなたはSNS投稿のプロです。"},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=200
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=data
         )
-        return response.choices[0].message.content.strip()
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"].strip()
+    except requests.exceptions.HTTPError as e:
+        return f"HTTPエラー: {e.response.status_code} - {e.response.text}"
     except Exception as e:
         return f"エラーが発生しました: {e}"
+
 
 # --- カードスタイルCSS ---
 st.markdown("""
