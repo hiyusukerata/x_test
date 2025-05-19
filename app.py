@@ -55,24 +55,29 @@ URL: {url}
     except Exception as e:
         return f"エラーが発生しました: {e}"
 
-# --- レーダーチャート描画関数（個別表示・スケール統一・カテゴリ表示改善） ---
-def plot_individual_radar_chart(metrics, label, max_scale):
+# --- レーダーチャート描画関数（相対10段階評価） ---
+def plot_relative_radar_chart(metrics, label):
     categories = ['フォロワー数', 'フォロー数', 'ツイート数']
-    values = [metrics['followers_count'], metrics['following_count'], metrics['tweet_count']]
-    values += values[:1]  # 最初の値を最後に追加して閉じる
+    raw_values = [metrics['followers_count'], metrics['following_count'], metrics['tweet_count']]
+
+    # スコア化（各項目に対して最大値に対して10段階スコア）
+    log_values = np.log1p(raw_values)  # 対数スケーリングで差を圧縮
+    max_log = max(log_values)
+    scores = [max(1, round((v / max_log) * 10)) for v in log_values]
+    scores += scores[:1]
+
     angles = [n / float(len(categories)) * 2 * pi for n in range(len(categories))]
-    angles += angles[:1]  # 最初の角度を最後に追加して閉じる
+    angles += angles[:1]
 
     fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
-    ax.plot(angles, values, color='#1DA1F2', linewidth=2, label=label)
-    ax.fill(angles, values, color='#1DA1F2', alpha=0.25)
+    ax.plot(angles, scores, color='#1DA1F2', linewidth=2, label=label)
+    ax.fill(angles, scores, color='#1DA1F2', alpha=0.25)
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels([f"{cat}\n({val:,})" for cat, val in zip(categories, values[:-1])], fontsize=10)
-
-    ax.set_yticks(np.linspace(0, max_scale, 5))
-    ax.set_yticklabels([f"{int(x)}" for x in np.linspace(0, max_scale, 5)], fontsize=8)
-    ax.set_ylim(0, max_scale)
+    ax.set_xticklabels(categories, fontsize=10)
+    ax.set_yticks(range(1, 11))
+    ax.set_yticklabels([str(i) for i in range(1, 11)], fontsize=8)
+    ax.set_ylim(0, 10)
     ax.set_title(label, size=13, pad=20)
     st.pyplot(fig)
 
@@ -124,16 +129,12 @@ with tabs[0]:
             st.dataframe(df_metrics, use_container_width=True, hide_index=True)
 
             st.markdown("---")
-            st.markdown("### 📈 レーダーチャート（アカウント別）")
-            max_scale = max(
-                max(metrics1['followers_count'], metrics1['following_count'], metrics1['tweet_count']),
-                max(metrics2['followers_count'], metrics2['following_count'], metrics2['tweet_count'])
-            ) * 1.1
+            st.markdown("### 📈 レーダーチャート（相対10段階評価）")
             col1, col2 = st.columns(2)
             with col1:
-                plot_individual_radar_chart(metrics1, username1, max_scale)
+                plot_relative_radar_chart(metrics1, username1)
             with col2:
-                plot_individual_radar_chart(metrics2, username2, max_scale)
+                plot_relative_radar_chart(metrics2, username2)
 
 with tabs[1]:
     st.subheader("X投稿用 要約生成（ChatGPT API）")
