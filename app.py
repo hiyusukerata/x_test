@@ -55,28 +55,21 @@ URL: {url}
     except Exception as e:
         return f"エラーが発生しました: {e}"
 
-# --- レーダーチャート描画関数 ---
-def plot_radar_chart(metrics1, metrics2, label1, label2):
+# --- レーダーチャート描画関数（個別表示） ---
+def plot_individual_radar_chart(metrics, label):
     categories = ['フォロワー数', 'フォロー数', 'ツイート数']
-    values1 = [metrics1['followers_count'], metrics1['following_count'], metrics1['tweet_count']]
-    values2 = [metrics2['followers_count'], metrics2['following_count'], metrics2['tweet_count']]
-
-    max_val = max(values1 + values2) * 1.1
-    values1.append(values1[0])
-    values2.append(values2[0])
+    values = [metrics['followers_count'], metrics['following_count'], metrics['tweet_count']]
+    values.append(values[0])
     angles = [n / float(len(categories)) * 2 * pi for n in range(len(categories))]
     angles.append(angles[0])
 
-    fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
-    ax.plot(angles, values1, label=label1)
-    ax.fill(angles, values1, alpha=0.25)
-    ax.plot(angles, values2, label=label2)
-    ax.fill(angles, values2, alpha=0.25)
+    fig, ax = plt.subplots(figsize=(4, 4), subplot_kw=dict(polar=True))
+    ax.plot(angles, values, label=label, color='#1DA1F2')
+    ax.fill(angles, values, alpha=0.3)
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(categories)
     ax.set_yticklabels([])
-    ax.set_ylim(0, max_val)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    ax.set_title(label, size=12, pad=20)
     st.pyplot(fig)
 
 # --- タイトルとタブ ---
@@ -129,8 +122,12 @@ with tabs[0]:
                 st.metric("フォロー数", f"{metrics2['following_count']:,}")
                 st.metric("ツイート数", f"{metrics2['tweet_count']:,}")
 
-            st.markdown("### 📈 レーダーチャート比較")
-            plot_radar_chart(metrics1, metrics2, username1, username2)
+            st.markdown("### 📈 レーダーチャート（アカウント別）")
+            col1, col2 = st.columns(2)
+            with col1:
+                plot_individual_radar_chart(metrics1, username1)
+            with col2:
+                plot_individual_radar_chart(metrics2, username2)
 
 with tabs[1]:
     st.subheader("X投稿用 要約生成（ChatGPT API）")
