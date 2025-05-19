@@ -69,23 +69,23 @@ def calculate_relative_scores(metrics1, metrics2):
         scores2.append(max(1, round(ratio2 * 10)))
     return scores1, scores2
 
-# --- レーダーチャート描画関数（10段階スコア） ---
+# --- レーダーチャート描画関数（英語カテゴリ名・10段階スコア） ---
 def plot_relative_chart(scores, label):
-    categories = ['フォロワー数', 'フォロー数', 'ツイート数']
+    categories = ['followers', 'following', 'posts']
     scores += scores[:1]
     angles = [n / float(len(categories)) * 2 * pi for n in range(len(categories))]
     angles += angles[:1]
 
-    fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
+    fig, ax = plt.subplots(figsize=(4.5, 4.5), subplot_kw=dict(polar=True))
     ax.plot(angles, scores, color='#1DA1F2', linewidth=2, label=label)
     ax.fill(angles, scores, color='#1DA1F2', alpha=0.25)
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories, fontsize=10)
+    ax.set_xticklabels(categories, fontsize=9)
     ax.set_yticks(range(1, 11))
     ax.set_yticklabels([str(i) for i in range(1, 11)], fontsize=8)
     ax.set_ylim(0, 10)
-    ax.set_title(f"{label}（相対スコア）", size=13, pad=20)
-    st.pyplot(fig)
+    ax.set_title(label, size=11, pad=10)
+    return fig
 
 # --- タイトルとタブ ---
 st.markdown("<h1 style='color:#1DA1F2;'>X（Twitter）アカウント比較</h1>", unsafe_allow_html=True)
@@ -126,6 +126,18 @@ with tabs[0]:
             st.dataframe(df_info, use_container_width=True, hide_index=True)
 
             st.markdown("---")
+
+            st.markdown("### 📈 レーダーチャート（10段階相対スコア）")
+            scores1, scores2 = calculate_relative_scores(metrics1, metrics2)
+            chart1 = plot_relative_chart(scores1, username1)
+            chart2 = plot_relative_chart(scores2, username2)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.pyplot(chart1)
+            with col2:
+                st.pyplot(chart2)
+
+            st.markdown("---")
             st.markdown("### 📊 数値比較")
             df_metrics = pd.DataFrame({
                 "項目": ["フォロワー数", "フォロー数", "ツイート数"],
@@ -133,15 +145,6 @@ with tabs[0]:
                 username2: [metrics2['followers_count'], metrics2['following_count'], metrics2['tweet_count']]
             })
             st.dataframe(df_metrics, use_container_width=True, hide_index=True)
-
-            st.markdown("---")
-            st.markdown("### 📈 レーダーチャート（10段階相対スコア）")
-            scores1, scores2 = calculate_relative_scores(metrics1, metrics2)
-            col1, col2 = st.columns(2)
-            with col1:
-                plot_relative_chart(scores1, username1)
-            with col2:
-                plot_relative_chart(scores2, username2)
 
 with tabs[1]:
     st.subheader("X投稿用 要約生成（ChatGPT API）")
