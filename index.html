@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X（Twitter）フォロワー追跡</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/2.29.3/date-fns.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1DA1F2;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            width: 30%;
+        }
+        .stat-box h3 {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .stat-box p {
+            margin: 10px 0 0 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1DA1F2;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #1DA1F2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background-color: #0c85d0;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        #message {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 20px;
+        }
+        #historyTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #historyTable th, #historyTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        #historyTable th {
+            background-color: #f2f2f2;
+        }
+        #historyTable tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #f2f2f2;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #1DA1F2;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 0 0 4px 4px;
+            border-top: 3px solid #1DA1F2;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>X（Twitter）フォロワー追跡</h1>
+    
+    <div class="container">
+        <div class="card">
+            <h2>データ入力</h2>
+            <div class="form-group">
+                <label for="username">X（Twitter）ユーザー名:</label>
+                <input type="text" id="username" placeholder="@なしでユーザー名を入力" required>
+            </div>
+            <div class="form-group">
+                <label for="followers">現在のフォロワー数:</label>
+                <input type="number" id="followers" placeholder="フォロワー数を入力" required>
+            </div>
+            <div class="form-group">
+                <label for="following">現在のフォロー数:</label>
+                <input type="number" id="following" placeholder="フォロー数を入力" required>
+            </div>
+            <div class="form-group">
+                <label for="date">日付:</label>
+                <input type="date" id="date" required>
+            </div>
+            <button id="saveBtn">データを保存</button>
+            <button id="clearBtn">データをクリア</button>
+            <div id="message"></div>
+        </div>
+
+        <div class="card stats">
+            <div class="stat-box">
+                <h3>フォロワー数</h3>
+                <p id="followers-count">-</p>
+            </div>
+            <div class="stat-box">
+                <h3>フォロー数</h3>
+                <p id="following-count">-</p>
+            </div>
+            <div class="stat-box">
+                <h3>最終更新日</h3>
+                <p id="last-updated">-</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="graph">グラフ</button>
+                    <button class="tab-button" data-tab="data">データ</button>
+                </div>
+                
+                <div id="graph-tab" class="tab-content active">
+                    <div class="chart-container">
+                        <canvas id="followersChart"></canvas>
+                    </div>
+                </div>
+                
+                <div id="data-tab" class="tab-content">
+                    <table id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th>フォロワー数</th>
+                                <th>フォロー数</th>
+                                <th>フォロワー増減</th>
+                                <th>フォロー増減</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- データがここに挿入されます -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-text">
+            <p><strong>使い方:</strong></p>
+            <ol>
+                <li>「データ入力」セクションでTwitterのユーザー名、フォロワー数、フォロー数、日付を入力します</li>
+                <li>「データを保存」ボタンをクリックして情報を保存します</li>
+                <li>毎日または定期的にデータを入力して、推移をグラフで確認できます</li>
+                <li>データはブラウザのローカルストレージに保存されます（他のデバイスやブラウザとは同期されません）</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // ローカルストレージからデータを取得する関数
+        function getStoredData() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) return null;
+            
+            const storedData = localStorage.getItem(`twitter_stats_${username}`);
+            return storedData ? JSON.parse(storedData) : null;
+        }
+
+        // ローカルストレージにデータを保存する関数
+        function saveData(username, data) {
+            localStorage.setItem(`twitter_stats_${username}`, JSON.stringify(data));
+        }
+
+        // 現在の日付を YYYY-MM-DD 形式で設定
+        function setCurrentDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('date').value = `${year}-${month}-${day}
