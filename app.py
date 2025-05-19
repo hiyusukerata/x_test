@@ -55,30 +55,43 @@ URL: {url}
     except Exception as e:
         return f"エラーが発生しました: {e}"
 
-# --- レーダーチャート描画関数（相対10段階評価） ---
-def plot_relative_radar_chart(metrics, label):
+# --- レーダーチャート描画関数（アカウント間相対評価） ---
+def plot_comparative_radar_chart(metrics1, metrics2, label1, label2):
     categories = ['フォロワー数', 'フォロー数', 'ツイート数']
-    raw_values = [metrics['followers_count'], metrics['following_count'], metrics['tweet_count']]
+    values1 = [metrics1['followers_count'], metrics1['following_count'], metrics1['tweet_count']]
+    values2 = [metrics2['followers_count'], metrics2['following_count'], metrics2['tweet_count']]
 
-    # スコア化（各項目に対して最大値に対して10段階スコア）
-    log_values = np.log1p(raw_values)  # 対数スケーリングで差を圧縮
-    max_log = max(log_values)
-    scores = [max(1, round((v / max_log) * 10)) for v in log_values]
-    scores += scores[:1]
+    scores1 = []
+    scores2 = []
+    for v1, v2 in zip(values1, values2):
+        total = v1 + v2
+        if total == 0:
+            scores1.append(5)
+            scores2.append(5)
+        else:
+            score1 = round((v1 / total) * 10)
+            score2 = 10 - score1
+            scores1.append(max(1, score1))
+            scores2.append(max(1, score2))
 
+    scores1 += scores1[:1]
+    scores2 += scores2[:1]
     angles = [n / float(len(categories)) * 2 * pi for n in range(len(categories))]
     angles += angles[:1]
 
-    fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
-    ax.plot(angles, scores, color='#1DA1F2', linewidth=2, label=label)
-    ax.fill(angles, scores, color='#1DA1F2', alpha=0.25)
+    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+    ax.plot(angles, scores1, label=label1, color="#1f77b4")
+    ax.fill(angles, scores1, alpha=0.25, color="#1f77b4")
+    ax.plot(angles, scores2, label=label2, color="#ff7f0e")
+    ax.fill(angles, scores2, alpha=0.25, color="#ff7f0e")
 
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(categories, fontsize=10)
     ax.set_yticks(range(1, 11))
     ax.set_yticklabels([str(i) for i in range(1, 11)], fontsize=8)
     ax.set_ylim(0, 10)
-    ax.set_title(label, size=13, pad=20)
+    ax.set_title("相対スコア (10段階評価)", size=14)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1.1))
     st.pyplot(fig)
 
 # --- タイトルとタブ ---
@@ -129,12 +142,8 @@ with tabs[0]:
             st.dataframe(df_metrics, use_container_width=True, hide_index=True)
 
             st.markdown("---")
-            st.markdown("### 📈 レーダーチャート（相対10段階評価）")
-            col1, col2 = st.columns(2)
-            with col1:
-                plot_relative_radar_chart(metrics1, username1)
-            with col2:
-                plot_relative_radar_chart(metrics2, username2)
+            st.markdown("### 📈 レーダーチャート（アカウント間相対評価）")
+            plot_comparative_radar_chart(metrics1, metrics2, username1, username2)
 
 with tabs[1]:
     st.subheader("X投稿用 要約生成（ChatGPT API）")
