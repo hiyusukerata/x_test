@@ -161,6 +161,7 @@ with tabs[1]:
 
 
 
+
 with tabs[2]:
     st.subheader("🗓 スケジュールベースの投稿予約（モック）")
 
@@ -174,11 +175,12 @@ with tabs[2]:
     st.markdown(f"### {year}年 {month}月")
     cal = calendar.Calendar()
 
-    # --- スケジュール管理 ---
     if "custom_events" not in st.session_state:
         st.session_state.custom_events = {}
+    if "selected_date" not in st.session_state:
+        st.session_state.selected_date = today.strftime("%Y-%m-%d")
 
-    # デフォルト予定
+    # イベントマップ作成
     schedule_json = {}
     for d in range(1, 32):
         try:
@@ -188,44 +190,72 @@ with tabs[2]:
                 items.append("ドリンク1杯無料デー")
             if d % 5 == 0:
                 items.append("10%オフデー")
-            custom_key = f"{year}-{month:02d}-{d:02d}"
-            if custom_key in st.session_state.custom_events:
-                items.extend(st.session_state.custom_events[custom_key])
+            key = current_date.strftime("%Y-%m-%d")
+            if key in st.session_state.custom_events:
+                items.extend(st.session_state.custom_events[key])
             if items:
-                schedule_json[d] = items
+                schedule_json[key] = items
         except:
             continue
 
-    selected_day = st.number_input("日付を選択してイベント確認・追加", min_value=1, max_value=31, value=today.day)
-    selected_key = f"{year}-{month:02d}-{selected_day:02d}"
-    st.markdown(f"#### 📅 {selected_day}日のイベント")
-    st.write(schedule_json.get(selected_day, ["予定はありません。"]))
+    # カレンダー描画と選択処理
+    def build_calendar():
+        html = "<table style='border-collapse: collapse; width: 100%; text-align: center;'>"
+        html += "<tr>" + "".join([f"<th style='padding: 4px'>{w}</th>" for w in ['日', '月', '火', '水', '木', '金', '土']]) + "</tr>"
+        for week in cal.monthdayscalendar(year, month):
+            html += "<tr>"
+            for day in week:
+                if day == 0:
+                    html += "<td></td>"
+                else:
+                    d_str = f"{year}-{month:02d}-{day:02d}"
+                    js = f"window.parent.postMessage('{d_str}','*')"
+                    style = "padding:6px; border:1px solid #ccc; font-size: 13px; cursor: pointer;"
+                    content = f"{day}"
+                    if day == today.day:
+                        style += " background-color:#1DA1F2; color:white; font-weight:bold;"
+                    dot = "<div style='font-size: 8px; color: black;'>●</div>" if d_str in schedule_json else ""
+                    html += f"<td onclick=\"{js}\" style='{style}'>{content}{dot}</td>"
+            html += "</tr>"
+        html += "</table>"
+        return html
 
-    new_event = st.text_input("イベントを追加")
-    if st.button("追加する"):
+    st.components.v1.html(
+        f"""
+        <script>
+        window.addEventListener("message", (e) => {{
+          const d = e.data;
+          const streamlitEvent = new CustomEvent("streamlit:setComponentValue", {{ detail: d }});
+          document.dispatchEvent(streamlitEvent);
+        }});
+        </script>
+        {build_calendar()}
+        """,
+        height=330
+    )
+
+    selected_date = st.text_input("イベントを確認・追加する日付 (YYYY-MM-DD)", value=st.session_state.selected_date)
+    st.session_state.selected_date = selected_date
+
+    # イベント確認と削除
+    st.markdown(f"#### 📅 {selected_date} のイベント")
+    current_events = schedule_json.get(selected_date, [])
+    if current_events:
+        for i, ev in enumerate(current_events):
+            st.write(f"{i+1}. {ev}")
+        delete_idx = st.number_input("削除したいイベント番号（上記リストの番号）", min_value=0, max_value=len(current_events), value=0)
+        if st.button("選択イベントを削除") and delete_idx > 0:
+            del_event = current_events[delete_idx - 1]
+            st.session_state.custom_events[selected_date].remove(del_event)
+            st.success(f"イベント「{del_event}」を削除しました")
+    else:
+        st.write("この日にはイベントがありません。")
+
+    new_event = st.text_input("新しいイベントを追加")
+    if st.button("イベントを追加"):
         if new_event.strip():
-            st.session_state.custom_events.setdefault(selected_key, []).append(new_event.strip())
+            st.session_state.custom_events.setdefault(selected_date, []).append(new_event.strip())
             st.success("イベントを追加しました")
-
-    # --- カレンダー表示 ---
-    cal_html = "<table style='border-collapse: collapse; width: 100%; text-align: center;'>"
-    cal_html += "<tr>" + "".join([f"<th style='padding: 4px'>{w}</th>" for w in ['日', '月', '火', '水', '木', '金', '土']]) + "</tr>"
-
-    for week in cal.monthdayscalendar(year, month):
-        cal_html += "<tr>"
-        for day in week:
-            if day == 0:
-                cal_html += "<td></td>"
-            else:
-                style = "padding:6px; border:1px solid #ccc; font-size: 13px;"
-                content = f"{day}"
-                if day == today.day:
-                    style += " background-color:#1DA1F2; color:white; font-weight:bold;"
-                dot = "<div style='font-size: 10px; color: black;'>●</div>" if day in schedule_json else ""
-                cal_html += f"<td style='{style}'>{content}{dot}</td>"
-        cal_html += "</tr>"
-    cal_html += "</table>"
-    st.markdown(cal_html, unsafe_allow_html=True)
 
     # --- イベント宣伝文生成 ---
     st.markdown("---")
