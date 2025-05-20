@@ -159,6 +159,8 @@ with tabs[1]:
                 if st.button("Xに投稿する（ダミー）"):
                     st.info("※ 実際の投稿機能は未実装です。")
 
+# Tab2: スケジュールベースの投稿予約（モック）
+
 with tabs[2]:
     import streamlit as st
     import calendar
@@ -295,11 +297,8 @@ with tabs[2]:
                 json.dump(st.session_state.event_data, f, ensure_ascii=False, indent=2)
             st.success("イベントを追加しました")
 
-
-
-    # --- イベント宣伝文生成 ---
     st.markdown("---")
-    st.markdown("### ✍ 宣伝文テンプレート（現状AIなし/実際はAI生成）")
+    st.markdown("### ✍ 宣伝文テンプレート（ChatGPT API なし）")
 
     # 次のイベント日と内容を探す
     future_events = sorted([(d, events[0]) for d, events in all_events.items() if events and d >= today.strftime("%Y-%m-%d")])
@@ -315,27 +314,36 @@ with tabs[2]:
             f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
         ]
         selected_option = st.radio("宣伝文候補を選択：", options, key="selected_ad_text")
+
+        # 予約投稿設定
+        st.markdown("---")
+        st.markdown("### ⏰ 予約投稿設定")
+        default_time = dt.now() + timedelta(hours=1)
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            y = st.number_input("年", value=default_time.year, step=1)
+        with col2:
+            m = st.number_input("月", min_value=1, max_value=12, value=default_time.month, step=1)
+        with col3:
+            d = st.number_input("日", min_value=1, max_value=31, value=default_time.day, step=1)
+        with col4:
+            h = st.number_input("時", min_value=0, max_value=23, value=default_time.hour, step=1)
+        with col5:
+            mi = st.number_input("分", min_value=0, max_value=59, value=0, step=1)
+
+        if st.button("予約投稿する"):
+            post_text = selected_option
+            post_time = f"{y}年{m:02d}月{d:02d}日 {h:02d}:{mi:02d}:00"
+            st.info(f"{post_time} に以下の投稿を予約しますか？")
+            st.code(post_text)
+
+            col_confirm1, col_confirm2 = st.columns([1, 1])
+            with col_confirm1:
+                if st.button("✅ はい（予約）"):
+                    st.success("予約投稿を受け付けました（仮）")
+            with col_confirm2:
+                if st.button("❌ いいえ（キャンセル）"):
+                    st.warning("予約をキャンセルしました")
+
     else:
         st.info("今後のイベントが見つかりませんでした。")
-
-
-    # --- 予約投稿設定 ---
-    st.markdown("---")
-    st.markdown("### ⏰ 予約投稿設定")
-    default_time = dt.now() + timedelta(hours=1)
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        y = st.number_input("年", value=default_time.year, step=1)
-    with col2:
-        m = st.number_input("月", min_value=1, max_value=12, value=default_time.month, step=1)
-    with col3:
-        d = st.number_input("日", min_value=1, max_value=31, value=default_time.day, step=1)
-    with col4:
-        h = st.number_input("時", min_value=0, max_value=23, value=default_time.hour, step=1)
-    with col5:
-        mi = st.number_input("分", min_value=0, max_value=59, value=0, step=1)
-
-    if st.button("予約投稿する"):
-        post_text = st.session_state.get("selected_ad", "")
-        st.info(f"{y}年{m:02d}月{d:02d}日 {h:02d}:{mi:02d}:00 に以下の投稿を予約しますか？")
-        st.code(post_text)
