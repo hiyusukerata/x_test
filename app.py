@@ -169,6 +169,9 @@ with tabs[2]:
     from datetime import date, timedelta, datetime as dt
     import streamlit.components.v1 as components
 
+    if st.button("📆 Googleカレンダーと連携（モック）"):
+    st.info("Googleカレンダーとの連携機能は現在モックです。")
+
     st.subheader("🗓 スケジュールベースの投稿予約（モック）")
 
     today = date.today()
