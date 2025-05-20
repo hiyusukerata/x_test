@@ -244,7 +244,7 @@ with tabs[2]:
                     content = f"{day}"
                     if d_str == today.strftime("%Y-%m-%d"):
                         style += " background-color:#1DA1F2; color:white; font-weight:bold;"
-                    dot = "<div style='font-size: 8px; color: black;'>●</div>" if d_str in all_events and all_events[d_str] else """"
+                    dot = "<div style='font-size: 8px; color: black;'>●</div>" if d_str in all_events and all_events[d_str] else ""
                     html += f"<td onclick=\"{js}\" style='{style}'>{content}{dot}</td>"
             html += "</tr>"
         html += "</table>"
