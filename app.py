@@ -299,7 +299,7 @@ with tabs[2]:
 
     # --- イベント宣伝文生成 ---
     st.markdown("---")
-    st.markdown("### ✍ 宣伝文テンプレート（ChatGPT API なし）")
+    st.markdown("### ✍ 宣伝文テンプレート（現状AIなし/実際はAI生成）")
 
     # 次のイベント日と内容を探す
     future_events = sorted([(d, events[0]) for d, events in all_events.items() if events and d >= today.strftime("%Y-%m-%d")])
