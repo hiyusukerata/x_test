@@ -163,7 +163,7 @@ with tabs[1]:
 
 
 with tabs[2]:
-    st.subheader("🗓 スケジュールベースの投稿予約（モック）")
+    st.subheader("🗓 スケジュールベースの投稿予約（カレンダークリック不可）")
 
     from datetime import date, timedelta, datetime as dt
     import calendar
