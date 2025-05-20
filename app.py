@@ -208,30 +208,38 @@ with tabs[2]:
                     html += "<td></td>"
                 else:
                     d_str = f"{year}-{month:02d}-{day:02d}"
-                    js = f"window.parent.postMessage('{d_str}','*')"
-                    style = "padding:6px; border:1px solid #ccc; font-size: 13px; cursor: pointer;"
+                    style = "padding:6px; border:1px solid #ccc; font-size: 13px;"
                     content = f"{day}"
                     if day == today.day:
                         style += " background-color:#1DA1F2; color:white; font-weight:bold;"
                     dot = "<div style='font-size: 8px; color: black;'>●</div>" if d_str in schedule_json else ""
-                    html += f"<td onclick=\"{js}\" style='{style}'>{content}{dot}</td>"
+                    html += f"<td data-date='{d_str}' style='{style}'>{content}{dot}</td>"
             html += "</tr>"
         html += "</table>"
         return html
 
-    # HTMLコンポーネントから日付を受け取る
     selected_day = components.html(
         f"""
         <script>
-        window.addEventListener("message", (e) => {{
-            const d = e.data;
-            const streamlitEvent = new CustomEvent("streamlit:setComponentValue", {{ detail: d }});
+        const postDate = (dateStr) => {{
+            const streamlitEvent = new CustomEvent("streamlit:componentValue", {{
+                detail: {{ returnValue: dateStr }},
+            }});
             document.dispatchEvent(streamlitEvent);
+        }};
+        window.addEventListener("DOMContentLoaded", () => {{
+            const cells = document.querySelectorAll("td[data-date]");
+            cells.forEach(cell => {{
+                cell.style.cursor = "pointer";
+                cell.onclick = () => postDate(cell.dataset.date);
+            }});
         }});
         </script>
         {build_calendar()}
         """,
-        height=330
+        height=330,
+        key="calendar",
+        default=None
     )
 
     # 日付の状態を反映
@@ -239,7 +247,6 @@ with tabs[2]:
         st.session_state.selected_date = selected_day
 
     selected_date = st.text_input("イベントを確認・追加する日付 (YYYY-MM-DD)", value=st.session_state.selected_date)
-    st.session_state.selected_date = selected_date
 
     # イベント確認と削除
     st.markdown(f"#### 📅 {selected_date} のイベント")
@@ -261,8 +268,6 @@ with tabs[2]:
         if new_event.strip():
             st.session_state.custom_events.setdefault(selected_date, []).append(new_event.strip())
             st.success("イベントを追加しました")
-
-    # ※ この後に宣伝文生成・予約投稿UIなどを続けて記述可能です。
 
     # --- イベント宣伝文生成 ---
     st.markdown("---")
