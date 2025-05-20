@@ -170,6 +170,7 @@ with tabs[2]:
     import streamlit.components.v1 as components
 
     st.subheader("🗓 スケジュールベースの投稿予約（モック）")
+    st.button("📅 Googleカレンダー連携")
 
 
     today = date.today()
