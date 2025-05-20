@@ -162,42 +162,78 @@ with tabs[1]:
 
 
 
-with tabs[2]:
-    st.subheader("🗓 スケジュールベースの投稿予約（カレンダークリック不可）")
 
-    from datetime import date, timedelta, datetime as dt
+with tabs[2]:
+    import streamlit as st
     import calendar
+    import json
+    import os
+    from datetime import date, timedelta, datetime as dt
     import streamlit.components.v1 as components
 
+    st.subheader("🗓 スケジュールベースの投稿予約（モック）")
+
     today = date.today()
-    year = today.year
-    month = today.month
+
+    if "calendar_year" not in st.session_state:
+        st.session_state.calendar_year = today.year
+    if "calendar_month" not in st.session_state:
+        st.session_state.calendar_month = today.month
+
+    year = st.session_state.calendar_year
+    month = st.session_state.calendar_month
+
+    col_prev, col_info, col_next = st.columns([1, 3, 1])
+    with col_prev:
+        if st.button("◀ 前月"):
+            if month == 1:
+                st.session_state.calendar_month = 12
+                st.session_state.calendar_year -= 1
+            else:
+                st.session_state.calendar_month -= 1
+    with col_info:
+        st.markdown(f"### {year}年 {month}月")
+    with col_next:
+        if st.button("次月 ▶"):
+            if month == 12:
+                st.session_state.calendar_month = 1
+                st.session_state.calendar_year += 1
+            else:
+                st.session_state.calendar_month += 1
+
     cal = calendar.Calendar()
 
-    if "custom_events" not in st.session_state:
-        st.session_state.custom_events = {}
+    if "event_data" not in st.session_state:
+        if os.path.exists("events.json"):
+            with open("events.json", "r", encoding="utf-8") as f:
+                st.session_state.event_data = json.load(f)
+        else:
+            st.session_state.event_data = {}
+
     if "selected_date" not in st.session_state:
         st.session_state.selected_date = today.strftime("%Y-%m-%d")
 
-    # イベントマップ作成
-    schedule_json = {}
-    for d in range(1, 32):
-        try:
-            current_date = date(year, month, d)
-            items = []
-            if current_date.weekday() in [1, 4]:
-                items.append("ドリンク1杯無料デー")
-            if d % 5 == 0:
-                items.append("10%オフデー")
-            key = current_date.strftime("%Y-%m-%d")
-            if key in st.session_state.custom_events:
-                items.extend(st.session_state.custom_events[key])
-            if items:
-                schedule_json[key] = items
-        except:
-            continue
+    def get_default_events(y, m):
+        default = {}
+        for d in range(1, 32):
+            try:
+                current_date = date(y, m, d)
+                key = current_date.strftime("%Y-%m-%d")
+                events = []
+                if current_date.weekday() in [1, 4]:
+                    events.append("ドリンク1杯無料デー")
+                if d % 5 == 0:
+                    events.append("10%オフデー")
+                default[key] = events
+            except:
+                continue
+        return default
 
-    # カレンダー描画
+    default_events = get_default_events(year, month)
+    all_events = {**default_events}
+    for k, v in st.session_state.event_data.items():
+        all_events.setdefault(k, []).extend(v)
+
     def build_calendar():
         html = "<table style='border-collapse: collapse; width: 100%; text-align: center;'>"
         html += "<tr>" + "".join([f"<th style='padding: 4px'>{w}</th>" for w in ['日', '月', '火', '水', '木', '金', '土']]) + "</tr>"
@@ -211,15 +247,14 @@ with tabs[2]:
                     js = f"window.parent.postMessage('{d_str}','*')"
                     style = "padding:6px; border:1px solid #ccc; font-size: 13px; cursor: pointer;"
                     content = f"{day}"
-                    if day == today.day:
+                    if d_str == today.strftime("%Y-%m-%d"):
                         style += " background-color:#1DA1F2; color:white; font-weight:bold;"
-                    dot = "<div style='font-size: 8px; color: black;'>●</div>" if d_str in schedule_json else ""
+                    dot = "<div style='font-size: 8px; color: black;'>●</div>" if d_str in all_events else ""
                     html += f"<td onclick=\"{js}\" style='{style}'>{content}{dot}</td>"
             html += "</tr>"
         html += "</table>"
         return html
 
-    # HTMLコンポーネントから日付を受け取る
     selected_day = components.html(
         f"""
         <script>
@@ -234,35 +269,52 @@ with tabs[2]:
         height=330
     )
 
-    # 日付の状態を反映
     if selected_day and isinstance(selected_day, str):
         st.session_state.selected_date = selected_day
 
     selected_date = st.text_input("イベントを確認・追加する日付 (YYYY-MM-DD)", value=st.session_state.selected_date)
     st.session_state.selected_date = selected_date
 
-    # イベント確認と削除
     st.markdown(f"#### 📅 {selected_date} のイベント")
-    current_events = schedule_json.get(selected_date, [])
+    current_events = all_events.get(selected_date, [])
     if current_events:
         for i, ev in enumerate(current_events):
             st.write(f"{i+1}. {ev}")
         delete_idx = st.number_input("削除したいイベント番号（上記リストの番号）", min_value=0, max_value=len(current_events), value=0)
         if st.button("選択イベントを削除") and delete_idx > 0:
             del_event = current_events[delete_idx - 1]
-            st.session_state.custom_events[selected_date].remove(del_event)
-            st.success(f"イベント「{del_event}」を削除しました")
+            if selected_date in st.session_state.event_data and del_event in st.session_state.event_data[selected_date]:
+                st.session_state.event_data[selected_date].remove(del_event)
+                st.success(f"イベント「{del_event}」を削除しました")
+
     else:
         st.write("この日にはイベントがありません。")
 
-    # イベント追加
     new_event = st.text_input("新しいイベントを追加")
     if st.button("イベントを追加"):
         if new_event.strip():
-            st.session_state.custom_events.setdefault(selected_date, []).append(new_event.strip())
+            st.session_state.event_data.setdefault(selected_date, []).append(new_event.strip())
+            with open("events.json", "w", encoding="utf-8") as f:
+                json.dump(st.session_state.event_data, f, ensure_ascii=False, indent=2)
             st.success("イベントを追加しました")
 
-    # ※ この後に宣伝文生成・予約投稿UIなどを続けて記述可能です。
+    with st.expander("📦 保存イベントデータ（セッション＋ファイル）"):
+        st.json(st.session_state.event_data)
+
+    if st.button("💾 イベントをファイルに保存"):
+        with open("events.json", "w", encoding="utf-8") as f:
+            json.dump(st.session_state.event_data, f, ensure_ascii=False, indent=2)
+        st.success("events.json に保存しました")
+
+    if st.button("📂 ファイルからイベントを読み込む"):
+        if os.path.exists("events.json"):
+            with open("events.json", "r", encoding="utf-8") as f:
+                st.session_state.event_data = json.load(f)
+            st.success("events.json を読み込みました")
+        else:
+            st.warning("events.json ファイルが存在しません")
+
+
 
     # --- イベント宣伝文生成 ---
     st.markdown("---")
