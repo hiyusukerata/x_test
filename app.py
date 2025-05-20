@@ -159,5 +159,106 @@ with tabs[1]:
                 if st.button("Xに投稿する（ダミー）"):
                     st.info("※ 実際の投稿機能は未実装です。")
 
+（省略：以前のコードはそのまま維持）
+
 with tabs[2]:
-    st.info("別の分析機能を追加予定（例：ツイート内容の分類など）")
+    st.subheader("🗓 スケジュールベースの投稿予約（モック）")
+
+    from datetime import date, timedelta
+    import calendar
+
+    # --- カレンダー描画 ---
+    today = date.today()
+    year = today.year
+    month = today.month
+
+    st.markdown(f"### {year}年 {month}月")
+    cal = calendar.Calendar()
+
+    schedule_json = {
+        "drink_days": [d for d in range(1, 32) if date(year, month, d).weekday() in [1, 4] and date(year, month, d).month == month],
+        "discount_days": [d for d in range(1, 32) if d % 5 == 0 and date(year, month, d).month == month]
+    }
+
+    cal_html = "<table style='border-collapse: collapse; width: 100%; text-align: center;'>"
+    cal_html += "<tr>" + "".join([f"<th style='padding: 4px'>{w}</th>" for w in ['日', '月', '火', '水', '木', '金', '土']]) + "</tr>"
+
+    for week in cal.monthdayscalendar(year, month):
+        cal_html += "<tr>"
+        for day in week:
+            if day == 0:
+                cal_html += "<td></td>"
+            else:
+                style = "padding:6px; border:1px solid #ccc;"
+                content = f"{day}"
+                if day == today.day:
+                    style += " background-color:#1DA1F2; color:white; font-weight:bold;"
+                elif day in schedule_json["drink_days"] or day in schedule_json["discount_days"]:
+                    content = f"{day} ⚪"
+                cal_html += f"<td style='{style}'>{content}</td>"
+        cal_html += "</tr>"
+    cal_html += "</table>"
+
+    st.markdown(cal_html, unsafe_allow_html=True)
+
+    # --- 次の予定日取得 ---
+    future_dates = []
+    for d in range(today.day + 1, 32):
+        dt = date(year, month, d)
+        if dt.weekday() in [1, 4]:
+            future_dates.append((dt, "ドリンク1杯無料デー"))
+        if d % 5 == 0:
+            future_dates.append((dt, "10%オフデー"))
+
+    if future_dates:
+        next_event_date, event_desc = sorted(future_dates)[0]
+
+        # --- ChatGPTで宣伝文生成 ---
+        prompt = f"{next_event_date.strftime('%Y年%m月%d日')}は{event_desc}です。来店を促す宣伝文（140字以内、X投稿向け）を3つ考えてください。"
+
+        try:
+            headers = {
+                "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",
+                "Content-Type": "application/json"
+            }
+            data = {
+                "model": "gpt-3.5-turbo",
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "n": 1
+            }
+            import requests
+            res = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
+            choices = res.json()["choices"][0]["message"]["content"].split("\n")
+            options = [c for c in choices if c.strip()]
+            selected = st.radio("生成された宣伝文の候補：", options, index=0)
+        except Exception as e:
+            st.error(f"宣伝文生成に失敗しました: {e}")
+            selected = None
+
+        # --- 予約投稿設定 ---
+        if selected:
+            st.markdown("---")
+            st.markdown("### ⏰ 予約投稿設定")
+            from datetime import datetime as dt
+            default_time = dt.now() + timedelta(hours=1)
+
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                y = st.number_input("年", value=default_time.year, step=1)
+            with col2:
+                m = st.number_input("月", min_value=1, max_value=12, value=default_time.month, step=1)
+            with col3:
+                d = st.number_input("日", min_value=1, max_value=31, value=default_time.day, step=1)
+            with col4:
+                h = st.number_input("時", min_value=0, max_value=23, value=default_time.hour, step=1)
+            with col5:
+                mi = st.number_input("分", min_value=0, max_value=59, value=0, step=1)
+
+            if st.button("予約投稿する"):
+                st.info(f"{y}年{m:02d}月{d:02d}日 {h:02d}:{mi:02d}:00 に以下の投稿を予約しますか？")
+                st.code(selected)
+    else:
+        st.info("今月の残りに特別な予定はありません。")
