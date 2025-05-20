@@ -87,9 +87,9 @@ def plot_relative_chart(scores, label):
     return fig
 
 # --- タイトルとタブ ---
-st.markdown("<h1 style='color:#1DA1F2;'>X（Twitter）アカウント比較</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#1DA1F2;'>X（Twitter）運用サポート</h1>", unsafe_allow_html=True)
 
-tabs = st.tabs(["アカウント比較", "X投稿用要約生成", "予約投稿"])
+tabs = st.tabs(["アカウント比較", "ブログ記事_投稿", "イベント告知予約投稿"])
 
 with tabs[0]:
     st.subheader("Xアカウント情報を比較")
@@ -98,7 +98,7 @@ with tabs[0]:
         with col1:
             username1 = st.text_input("アカウント1のユーザー名", value="GoodAppsbyGMO")
         with col2:
-            username2 = st.text_input("アカウント2のユーザー名", value="OpenAI")
+            username2 = st.text_input("アカウント2のユーザー名", value="gmossp_taxel")
         submitted = st.form_submit_button("比較する")
 
     if submitted:
