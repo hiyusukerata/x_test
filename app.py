@@ -296,22 +296,24 @@ with tabs[2]:
                 json.dump(st.session_state.event_data, f, ensure_ascii=False, indent=2)
             st.success("イベントを追加しました")
 
+    # --- 宣伝文テンプレート ---
     st.markdown("---")
-    st.markdown("### ✍ 宣伝文テンプレート（ChatGPT API なし）")
+    st.markdown("### ✍ 宣伝文テンプレート（選択日ベース）")
 
-    dt_obj = dt.strptime(selected_date, "%Y-%m-%d")
-    short_month = dt_obj.strftime("%m")
-    short_day = dt_obj.strftime("%d")
-    selected_events = all_events.get(selected_date, [])
-    if selected_events:
-        event = selected_events[0]
+    if selected_date in all_events and all_events[selected_date]:
+        event = all_events[selected_date][0]
+        dt_obj = dt.strptime(selected_date, "%Y-%m-%d")
+        month_str = dt_obj.strftime("%m")
+        day_str = dt_obj.strftime("%d")
+
         options = [
-            f"{short_month}月{short_day}日は{event}！みなさまのご来店をお待ちしております。",
-            f"{short_month}月{short_day}日は{event}！乞うご期待！！",
-            f"{short_month}月{short_day}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
+            f"{month_str}月{day_str}日は{event}！みなさまのご来店をお待ちしております。",
+            f"{month_str}月{day_str}日は{event}！乞うご期待！！",
+            f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
         ]
         selected_option = st.radio("宣伝文候補を選択：", options, key="selected_ad_text")
 
+        # --- 予約投稿設定 ---
         st.markdown("---")
         st.markdown("### ⏰ 予約投稿設定")
         default_time = dt.now() + timedelta(hours=1)
@@ -328,23 +330,24 @@ with tabs[2]:
             mi = st.number_input("分", min_value=0, max_value=59, value=0, step=1)
 
         if st.button("予約投稿する"):
-            post_text = selected_option
             post_time = f"{y}年{m:02d}月{d:02d}日 {h:02d}:{mi:02d}:00"
-            st.session_state.confirming_post = True
-            st.session_state.post_text = post_text
-            st.session_state.post_time = post_time
+            st.session_state.reservation_check = True
+            st.session_state.reservation_text = selected_option
+            st.session_state.reservation_time = post_time
 
-    if st.session_state.get("confirming_post"):
-        st.info(f"{st.session_state.post_time} に以下の投稿を予約しますか？")
-        st.code(st.session_state.post_text)
+    # --- 予約確認表示 ---
+    if st.session_state.get("reservation_check"):
+        st.info(f"{st.session_state.reservation_time} に以下の投稿を予約しますか？")
+        st.code(st.session_state.reservation_text)
+
         col_confirm1, col_confirm2 = st.columns([1, 1])
         with col_confirm1:
             if st.button("✅ はい（予約）"):
                 st.success("予約投稿を受け付けました（仮）")
-                st.session_state.confirming_post = False
+                st.session_state.reservation_check = False
         with col_confirm2:
             if st.button("❌ いいえ（キャンセル）"):
                 st.warning("予約をキャンセルしました")
-                st.session_state.confirming_post = False
+                st.session_state.reservation_check = False
     else:
-        st.session_state.confirming_post = False
+        st.session_state.reservation_check = False
