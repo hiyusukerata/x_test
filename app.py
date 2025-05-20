@@ -167,12 +167,11 @@ with tabs[2]:
 
     from datetime import date, timedelta, datetime as dt
     import calendar
+    import streamlit.components.v1 as components
 
     today = date.today()
     year = today.year
     month = today.month
-
-    st.markdown(f"### {year}年 {month}月")
     cal = calendar.Calendar()
 
     if "custom_events" not in st.session_state:
@@ -198,7 +197,7 @@ with tabs[2]:
         except:
             continue
 
-    # カレンダー描画と選択処理
+    # カレンダー描画
     def build_calendar():
         html = "<table style='border-collapse: collapse; width: 100%; text-align: center;'>"
         html += "<tr>" + "".join([f"<th style='padding: 4px'>{w}</th>" for w in ['日', '月', '火', '水', '木', '金', '土']]) + "</tr>"
@@ -220,19 +219,24 @@ with tabs[2]:
         html += "</table>"
         return html
 
-    st.components.v1.html(
+    # HTMLコンポーネントから日付を受け取る
+    selected_day = components.html(
         f"""
         <script>
         window.addEventListener("message", (e) => {{
-          const d = e.data;
-          const streamlitEvent = new CustomEvent("streamlit:setComponentValue", {{ detail: d }});
-          document.dispatchEvent(streamlitEvent);
+            const d = e.data;
+            const streamlitEvent = new CustomEvent("streamlit:setComponentValue", {{ detail: d }});
+            document.dispatchEvent(streamlitEvent);
         }});
         </script>
         {build_calendar()}
         """,
         height=330
     )
+
+    # 日付の状態を反映
+    if selected_day and isinstance(selected_day, str):
+        st.session_state.selected_date = selected_day
 
     selected_date = st.text_input("イベントを確認・追加する日付 (YYYY-MM-DD)", value=st.session_state.selected_date)
     st.session_state.selected_date = selected_date
@@ -251,11 +255,14 @@ with tabs[2]:
     else:
         st.write("この日にはイベントがありません。")
 
+    # イベント追加
     new_event = st.text_input("新しいイベントを追加")
     if st.button("イベントを追加"):
         if new_event.strip():
             st.session_state.custom_events.setdefault(selected_date, []).append(new_event.strip())
             st.success("イベントを追加しました")
+
+    # ※ この後に宣伝文生成・予約投稿UIなどを続けて記述可能です。
 
     # --- イベント宣伝文生成 ---
     st.markdown("---")
