@@ -299,37 +299,25 @@ with tabs[2]:
 
     # --- イベント宣伝文生成 ---
     st.markdown("---")
-    st.markdown("### 🤖 イベント宣伝文の生成（ChatGPT API）")
-    if st.button("宣伝文を生成する"):
-        future_events = [(d, items[0]) for d, items in schedule_json.items() if d >= today.day]
-        if future_events:
-            next_day, desc = sorted(future_events)[0]
-            next_date = date(year, month, next_day)
-            prompt = f"{next_date.strftime('%Y年%m月%d日')}は{desc}です。来店を促す宣伝文（140字以内、X投稿向け）を3つ考えてください。"
+    st.markdown("### ✍ 宣伝文テンプレート（ChatGPT API なし）")
 
-            try:
-                headers = {
-                    "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",
-                    "Content-Type": "application/json"
-                }
-                data = {
-                    "model": "gpt-3.5-turbo",
-                    "messages": [
-                        {"role": "user", "content": prompt}
-                    ],
-                    "temperature": 0.7,
-                    "n": 1
-                }
-                import requests
-                res = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
-                choices = res.json()["choices"][0]["message"]["content"].split("\n")
-                options = [c for c in choices if c.strip()]
-                st.session_state["ad_suggestions"] = options[:3]
-            except Exception as e:
-                st.error(f"宣伝文生成に失敗しました: {e}")
+    # 次のイベント日と内容を探す
+    future_events = sorted([(d, events[0]) for d, events in all_events.items() if events and d >= today.strftime("%Y-%m-%d")])
+    if future_events:
+        next_date_str, event = future_events[0]
+        dt_obj = dt.strptime(next_date_str, "%Y-%m-%d")
+        month_str = dt_obj.strftime("%m")
+        day_str = dt_obj.strftime("%d")
 
-    if "ad_suggestions" in st.session_state:
-        st.radio("生成された宣伝文候補：", st.session_state["ad_suggestions"], key="selected_ad")
+        options = [
+            f"{month_str}月{day_str}日は{event}！みなさまのご来店をお待ちしております。",
+            f"{month_str}月{day_str}日は{event}！乞うご期待！！",
+            f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
+        ]
+        selected_option = st.radio("宣伝文候補を選択：", options, key="selected_ad_text")
+    else:
+        st.info("今後のイベントが見つかりませんでした。")
+
 
     # --- 予約投稿設定 ---
     st.markdown("---")
