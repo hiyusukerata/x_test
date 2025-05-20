@@ -160,9 +160,6 @@ with tabs[1]:
                     st.info("※ 実際の投稿機能は未実装です。")
 
 
-
-
-
 with tabs[2]:
     import streamlit as st
     import calendar
@@ -180,22 +177,21 @@ with tabs[2]:
     if "calendar_month" not in st.session_state:
         st.session_state.calendar_month = today.month
 
-    year = st.session_state.calendar_year
-    month = st.session_state.calendar_month
-
     col_prev, col_info, col_next = st.columns([1, 3, 1])
     with col_prev:
         if st.button("◀ 前月"):
-            if month == 1:
+            if st.session_state.calendar_month == 1:
                 st.session_state.calendar_month = 12
                 st.session_state.calendar_year -= 1
             else:
                 st.session_state.calendar_month -= 1
     with col_info:
+        year = st.session_state.calendar_year
+        month = st.session_state.calendar_month
         st.markdown(f"### {year}年 {month}月")
     with col_next:
         if st.button("次月 ▶"):
-            if month == 12:
+            if st.session_state.calendar_month == 12:
                 st.session_state.calendar_month = 1
                 st.session_state.calendar_year += 1
             else:
@@ -285,6 +281,8 @@ with tabs[2]:
             del_event = current_events[delete_idx - 1]
             if selected_date in st.session_state.event_data and del_event in st.session_state.event_data[selected_date]:
                 st.session_state.event_data[selected_date].remove(del_event)
+                with open("events.json", "w", encoding="utf-8") as f:
+                    json.dump(st.session_state.event_data, f, ensure_ascii=False, indent=2)
                 st.success(f"イベント「{del_event}」を削除しました")
 
     else:
@@ -297,22 +295,6 @@ with tabs[2]:
             with open("events.json", "w", encoding="utf-8") as f:
                 json.dump(st.session_state.event_data, f, ensure_ascii=False, indent=2)
             st.success("イベントを追加しました")
-
-    with st.expander("📦 保存イベントデータ（セッション＋ファイル）"):
-        st.json(st.session_state.event_data)
-
-    if st.button("💾 イベントをファイルに保存"):
-        with open("events.json", "w", encoding="utf-8") as f:
-            json.dump(st.session_state.event_data, f, ensure_ascii=False, indent=2)
-        st.success("events.json に保存しました")
-
-    if st.button("📂 ファイルからイベントを読み込む"):
-        if os.path.exists("events.json"):
-            with open("events.json", "r", encoding="utf-8") as f:
-                st.session_state.event_data = json.load(f)
-            st.success("events.json を読み込みました")
-        else:
-            st.warning("events.json ファイルが存在しません")
 
 
 
