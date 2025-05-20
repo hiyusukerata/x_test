@@ -172,8 +172,8 @@ with tabs[2]:
     st.subheader("🗓 スケジュールベースの投稿予約（モック）")
 
     
-    if st.button("📆 Googleカレンダーと連携（モック）"):
-    st.info("Googleカレンダーとの連携機能は現在モックです。")
+        if st.button("📆 Googleカレンダーと連携（モック）"):
+        st.info("Googleカレンダーとの連携機能は現在モックです。")
 
 
     today = date.today()
