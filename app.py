@@ -298,102 +298,102 @@ with tabs[2]:
                 json.dump(st.session_state.event_data, f, ensure_ascii=False, indent=2)
             st.success("イベントを追加しました")
 
-    # --- 宣伝文テンプレート ---
-    st.markdown("### ✍ 宣伝文テンプレート（X投稿風UI）")
-    
-    if selected_date in all_events and all_events[selected_date]:
-        event = all_events[selected_date][0]
-        dt_obj = dt.strptime(selected_date, "%Y-%m-%d")
-        month_str = dt_obj.strftime("%m")
-        day_str = dt_obj.strftime("%d")
-    
-        options = [
-            f"{month_str}月{day_str}日は{event}！みなさまのご来店をお待ちしております。",
-            f"{month_str}月{day_str}日は{event}！乞うご期待！！",
-            f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
-        ]
-    
-        if "selected_ad_index" not in st.session_state:
-            st.session_state.selected_ad_index = None
+        # --- 宣伝文テンプレート ---
+        st.markdown("### ✍ 宣伝文テンプレート（X投稿風UI）")
         
-        # --- 投稿テンプレート選択セクション ---
-        for i, opt in enumerate(options):
-            is_selected = st.session_state.selected_ad_index == i
-            selected_style = "border: 2px solid #1DA1F2;" if is_selected else "border: 1px solid #ccc;"
+        if selected_date in all_events and all_events[selected_date]:
+            event = all_events[selected_date][0]
+            dt_obj = dt.strptime(selected_date, "%Y-%m-%d")
+            month_str = dt_obj.strftime("%m")
+            day_str = dt_obj.strftime("%d")
         
-            with st.container():
-                col_card, col_button = st.columns([6, 1])
+            options = [
+                f"{month_str}月{day_str}日は{event}！みなさまのご来店をお待ちしております。",
+                f"{month_str}月{day_str}日は{event}！乞うご期待！！",
+                f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
+            ]
         
-                with col_card:
-                    st.markdown(
-                        f"""
-                        <div style="
-                            {selected_style}
-                            border-radius: 16px;
-                            padding: 16px;
-                            margin: 12px 0;
-                            background-color: #fff;
-                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-                        ">
-                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                                <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png" width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
-                                <div style="font-weight: bold; font-size: 16px;">Good!Apps 店長</div>
+            if "selected_ad_index" not in st.session_state:
+                st.session_state.selected_ad_index = None
+            
+            # --- 投稿テンプレート選択セクション ---
+            for i, opt in enumerate(options):
+                is_selected = st.session_state.selected_ad_index == i
+                selected_style = "border: 2px solid #1DA1F2;" if is_selected else "border: 1px solid #ccc;"
+            
+                with st.container():
+                    col_card, col_button = st.columns([6, 1])
+            
+                    with col_card:
+                        st.markdown(
+                            f"""
+                            <div style="
+                                {selected_style}
+                                border-radius: 16px;
+                                padding: 16px;
+                                margin: 12px 0;
+                                background-color: #fff;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                                font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                            ">
+                                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                    <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png" width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
+                                    <div style="font-weight: bold; font-size: 16px;">Good!Apps 店長</div>
+                                </div>
+                                <div style="font-size: 15px; line-height: 1.6;">{opt}</div>
+                                <div style="color: #1DA1F2; font-size: 13px; margin-top: 12px;">
+                                    🌍 すべてのユーザーが返信できます
+                                </div>
                             </div>
-                            <div style="font-size: 15px; line-height: 1.6;">{opt}</div>
-                            <div style="color: #1DA1F2; font-size: 13px; margin-top: 12px;">
-                                🌍 すべてのユーザーが返信できます
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                            """,
+                            unsafe_allow_html=True
+                        )
+            
+                    with col_button:
+                        # styleはこの特定のボタンにだけ適用されるようにHTMLを閉じた外にする
+                        btn_placeholder = st.empty()
+                        if btn_placeholder.button("この投稿文を選ぶ", key=f"select_button_{i}"):
+                            st.session_state.selected_ad_index = i
+                            st.success("投稿文を選択しました！")
         
-                with col_button:
-                    # styleはこの特定のボタンにだけ適用されるようにHTMLを閉じた外にする
-                    btn_placeholder = st.empty()
-                    if btn_placeholder.button("この投稿文を選ぶ", key=f"select_button_{i}"):
-                        st.session_state.selected_ad_index = i
-                        st.success("投稿文を選択しました！")
-    
-    
-    
-    
-        # --- 予約投稿設定UI ---
-        if st.session_state.selected_ad_index is not None:
-            selected_option = options[st.session_state.selected_ad_index]
-            st.markdown("### ⏰ 予約投稿設定")
-            default_time = dt.now() + timedelta(hours=1)
-            col1, col2, col3, col4, col5 = st.columns(5)
-            with col1:
-                y = st.number_input("年", value=default_time.year, step=1)
-            with col2:
-                m = st.number_input("月", min_value=1, max_value=12, value=default_time.month, step=1)
-            with col3:
-                d = st.number_input("日", min_value=1, max_value=31, value=default_time.day, step=1)
-            with col4:
-                h = st.number_input("時", min_value=0, max_value=23, value=default_time.hour, step=1)
-            with col5:
-                mi = st.number_input("分", min_value=0, max_value=59, value=0, step=1)
-    
-            if st.button("予約投稿する"):
-                post_time = f"{y}年{m:02d}月{d:02d}日 {h:02d}:{mi:02d}:00"
-                st.session_state.reservation_check = True
-                st.session_state.reservation_text = selected_option
-                st.session_state.reservation_time = post_time
-    
-        if st.session_state.get("reservation_check"):
-            st.info(f"{st.session_state.reservation_time} に以下の投稿を予約しますか？")
-            st.code(st.session_state.reservation_text)
-    
-            col_confirm1, col_confirm2 = st.columns([1, 1])
-            with col_confirm1:
-                if st.button("✅ はい（予約）"):
-                    st.success("予約投稿を受け付けました（仮）")
-                    st.session_state.reservation_check = False
-            with col_confirm2:
-                if st.button("❌ いいえ（キャンセル）"):
-                    st.warning("予約をキャンセルしました")
-                    st.session_state.reservation_check = False
-        else:
-            st.session_state.reservation_check = False
+        
+        
+        
+            # --- 予約投稿設定UI ---
+            if st.session_state.selected_ad_index is not None:
+                selected_option = options[st.session_state.selected_ad_index]
+                st.markdown("### ⏰ 予約投稿設定")
+                default_time = dt.now() + timedelta(hours=1)
+                col1, col2, col3, col4, col5 = st.columns(5)
+                with col1:
+                    y = st.number_input("年", value=default_time.year, step=1)
+                with col2:
+                    m = st.number_input("月", min_value=1, max_value=12, value=default_time.month, step=1)
+                with col3:
+                    d = st.number_input("日", min_value=1, max_value=31, value=default_time.day, step=1)
+                with col4:
+                    h = st.number_input("時", min_value=0, max_value=23, value=default_time.hour, step=1)
+                with col5:
+                    mi = st.number_input("分", min_value=0, max_value=59, value=0, step=1)
+        
+                if st.button("予約投稿する"):
+                    post_time = f"{y}年{m:02d}月{d:02d}日 {h:02d}:{mi:02d}:00"
+                    st.session_state.reservation_check = True
+                    st.session_state.reservation_text = selected_option
+                    st.session_state.reservation_time = post_time
+        
+            if st.session_state.get("reservation_check"):
+                st.info(f"{st.session_state.reservation_time} に以下の投稿を予約しますか？")
+                st.code(st.session_state.reservation_text)
+        
+                col_confirm1, col_confirm2 = st.columns([1, 1])
+                with col_confirm1:
+                    if st.button("✅ はい（予約）"):
+                        st.success("予約投稿を受け付けました（仮）")
+                        st.session_state.reservation_check = False
+                with col_confirm2:
+                    if st.button("❌ いいえ（キャンセル）"):
+                        st.warning("予約をキャンセルしました")
+                        st.session_state.reservation_check = False
+            else:
+                st.session_state.reservation_check = False
