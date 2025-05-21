@@ -315,7 +315,7 @@ if selected_date in all_events and all_events[selected_date]:
 
     st.markdown("以下の投稿テンプレートから選択してください：")
 
-    # 選択用セッション状態
+    # 選択状態の保持
     if "selected_ad_index" not in st.session_state:
         st.session_state.selected_ad_index = None
 
@@ -342,26 +342,13 @@ if selected_date in all_events and all_events[selected_date]:
                 <div style="color: #1DA1F2; font-size: 13px; margin-top: 12px;">
                     🌍 すべてのユーザーが返信できます
                 </div>
-                <form action="" method="post">
-                    <button name="select_ad" type="submit" value="{i}" style="
-                        margin-top: 10px;
-                        background-color: #1DA1F2;
-                        color: white;
-                        border: none;
-                        padding: 6px 16px;
-                        border-radius: 20px;
-                        font-size: 14px;
-                        cursor: pointer;
-                    ">この投稿文を選ぶ</button>
-                </form>
             </div>
             """,
             unsafe_allow_html=True
         )
-
-    # 選択結果を反映
-    if "select_ad" in st.session_state:
-        st.session_state.selected_ad_index = int(st.session_state.select_ad)
+        if st.button(f"この投稿文を選ぶ", key=f"select_button_{i}"):
+            st.session_state.selected_ad_index = i
+            st.success("投稿文を選択しました！")
 
     # --- 予約投稿設定UI ---
     if st.session_state.selected_ad_index is not None:
