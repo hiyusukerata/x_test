@@ -319,56 +319,58 @@ if selected_date in all_events and all_events[selected_date]:
         st.session_state.selected_ad_index = None
 
     for i, opt in enumerate(options):
-        is_selected = st.session_state.selected_ad_index == i
-        border_style = "2px solid #1DA1F2" if is_selected else "1px solid #ccc"
-
-        # HTMLカード部分
-        st.markdown(
-            f"""
-            <div style="
-                border: {border_style};
-                border-radius: 16px;
-                padding: 16px;
-                margin-bottom: 16px;
-                background-color: #fff;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-                position: relative;
-            ">
-                <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                    <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
-                         width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
-                    <div style="font-weight: bold; font-size: 16px;">Good!Apps 店長</div>
-                </div>
-                <div style="font-size: 15px; line-height: 1.6;">{opt}</div>
-                <div style="color: #1DA1F2; font-size: 13px; margin-top: 12px;">
-                    🌍 すべてのユーザーが返信できます
-                </div>
+    is_selected = st.session_state.selected_ad_index == i
+    border_style = "2px solid #1DA1F2" if is_selected else "1px solid #ccc"
+    
+    # --- HTML カード本体 ---
+    st.markdown(
+        f"""
+        <div style="
+            border: {border_style};
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        ">
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
+                     width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
+                <div style="font-weight: bold; font-size: 16px;">Good!Apps 店長</div>
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+            <div style="font-size: 15px; line-height: 1.6;">{opt}</div>
+            <div style="color: #1DA1F2; font-size: 13px; margin-top: 12px;">
+                🌍 すべてのユーザーが返信できます
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-        # ボタンは直後に置く（見た目はカード内にあるように見せる）
-        button_style = """
-            <style>
-            div[data-testid="stButton"] button {
-                background-color: #1DA1F2;
-                color: white;
-                border: none;
-                border-radius: 9999px;
-                padding: 6px 20px;
-                font-size: 14px;
-                margin-top: -60px;
-                margin-bottom: 40px;
-                float: right;
-            }
-            </style>
-        """
-        st.markdown(button_style, unsafe_allow_html=True)
-        if st.button("この投稿文を選ぶ", key=f"select_button_{i}"):
-            st.session_state.selected_ad_index = i
-            st.success("投稿文を選択しました！")
+    # --- ボタンのスタイル調整（選択されたら濃い青に） ---
+    button_color = "#127AC1" if is_selected else "#1DA1F2"
+    button_css = f"""
+        <style>
+        div[data-testid="stButton"][key="select_button_{i}"] button {{
+            background-color: {button_color};
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            padding: 6px 20px;
+            font-size: 14px;
+            margin-top: -60px;
+            margin-bottom: 40px;
+            float: right;
+        }}
+        </style>
+    """
+    st.markdown(button_css, unsafe_allow_html=True)
+
+    if st.button("この投稿文を選ぶ", key=f"select_button_{i}"):
+        st.session_state.selected_ad_index = i
+        st.success("投稿文を選択しました！")
+
 
     # --- 予約投稿設定UI ---
     if st.session_state.selected_ad_index is not None:
