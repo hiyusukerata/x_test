@@ -313,63 +313,43 @@ if selected_date in all_events and all_events[selected_date]:
         f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
     ]
 
-    st.markdown("以下の投稿テンプレートから選択してください：")
-
     if "selected_ad_index" not in st.session_state:
         st.session_state.selected_ad_index = None
 
     for i, opt in enumerate(options):
-    is_selected = st.session_state.selected_ad_index == i
-    border_style = "2px solid #1DA1F2" if is_selected else "1px solid #ccc"
-    
-    # --- HTML カード本体 ---
-    st.markdown(
-        f"""
-        <div style="
-            border: {border_style};
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
-            background-color: #fff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-        ">
-            <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
-                     width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
-                <div style="font-weight: bold; font-size: 16px;">Good!Apps 店長</div>
-            </div>
-            <div style="font-size: 15px; line-height: 1.6;">{opt}</div>
-            <div style="color: #1DA1F2; font-size: 13px; margin-top: 12px;">
-                🌍 すべてのユーザーが返信できます
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        is_selected = st.session_state.selected_ad_index == i
+        selected_style = "border: 2px solid #1DA1F2;" if is_selected else "border: 1px solid #ccc;"
 
-    # --- ボタンのスタイル調整（選択されたら濃い青に） ---
-    button_color = "#127AC1" if is_selected else "#1DA1F2"
-    button_css = f"""
-        <style>
-        div[data-testid="stButton"][key="select_button_{i}"] button {{
-            background-color: {button_color};
-            color: white;
-            border: none;
-            border-radius: 9999px;
-            padding: 6px 20px;
-            font-size: 14px;
-            margin-top: -60px;
-            margin-bottom: 40px;
-            float: right;
-        }}
-        </style>
-    """
-    st.markdown(button_css, unsafe_allow_html=True)
+        col_card, col_button = st.columns([6, 1])
+        with col_card:
+            st.markdown(
+                f"""
+                <div style="
+                    {selected_style}
+                    border-radius: 16px;
+                    padding: 16px;
+                    margin: 12px 0;
+                    background-color: #fff;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                ">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png" width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
+                        <div style="font-weight: bold; font-size: 16px;">Good!Apps 店長</div>
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.6;">{opt}</div>
+                    <div style="color: #1DA1F2; font-size: 13px; margin-top: 12px;">
+                        🌍 すべてのユーザーが返信できます
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        with col_button:
+            if st.button("この投稿文を選ぶ", key=f"select_button_{i}"):
+                st.session_state.selected_ad_index = i
+                st
 
-    if st.button("この投稿文を選ぶ", key=f"select_button_{i}"):
-        st.session_state.selected_ad_index = i
-        st.success("投稿文を選択しました！")
 
 
     # --- 予約投稿設定UI ---
