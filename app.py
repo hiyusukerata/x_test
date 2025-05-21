@@ -117,16 +117,35 @@ with tabs[0]:
             metrics2 = user2["public_metrics"]
         
             st.markdown("### 👤 アカウント基本情報")
-        
-            col1, col2 = st.columns(2)
-            for user, col, uname in zip([user1, user2], [col1, col2], [username1, username2]):
-                with col:
-                    st.image(user["profile_image_url"], width=64)
-                    st.markdown(f"**アカウント名**：{user['name']}")
-                    st.markdown(f"**ユーザー名**：@{uname}")
-                    st.markdown(f"**プロフィール文**：{user.get('description', '(bioなし)')}")
 
-            st.dataframe(df_info, use_container_width=True, hide_index=True)
+            df_info = pd.DataFrame({
+                "項目": ["アイコン", "アカウント名", "ユーザー名", "プロフィール文"],
+                username1: [
+                    f"![]({user1['profile_image_url']})",  # Markdown形式で画像
+                    user1["name"],
+                    username1,
+                    user1.get("description", "(bioなし)")
+                ],
+                username2: [
+                    f"![]({user2['profile_image_url']})",
+                    user2["name"],
+                    username2,
+                    user2.get("description", "(bioなし)")
+                ]
+            })
+            
+            # 表の「アイコン」列を画像として表示するため unsafe_allow_html=True で個別表示
+            for row_idx in range(len(df_info)):
+                if df_info.iloc[row_idx, 0].startswith("![]("):  # アイコン行だけ
+                    cols = st.columns(3)
+                    cols[0].markdown(f"**{df_info.iloc[row_idx, 0]}**", unsafe_allow_html=True)
+                    cols[1].markdown(df_info.columns[1])
+                    cols[2].markdown(df_info.columns[2])
+                    break
+            else:
+                # 通常の表を出す（他の行）
+                st.dataframe(df_info, use_container_width=True, hide_index=True)
+
 
             st.markdown("---")
             scores1, scores2 = calculate_relative_scores(metrics1, metrics2)
