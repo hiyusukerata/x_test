@@ -300,7 +300,7 @@ with tabs[2]:
 
     # --- 宣伝文テンプレート ---
     st.markdown("---")
-    st.markdown("### ✍ 宣伝文テンプレート（選択日ベース）")
+    st.markdown("### ✍ 宣伝文テンプレート（選択日対応）")
 
     if selected_date in all_events and all_events[selected_date]:
         event = all_events[selected_date][0]
@@ -309,9 +309,9 @@ with tabs[2]:
         day_str = dt_obj.strftime("%d")
 
         options = [
-            f"{month_str}月{day_str}日は{event}！みなさまのご来店をお待ちしております。",
-            f"{month_str}月{day_str}日は{event}！乞うご期待！！",
-            f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
+            f"{month_str}月{day_str}日は{event}！みなさまのご来店をお待ちしております。(※本番はAI生成した気の利いた文面が入ります)",
+            f"{month_str}月{day_str}日は{event}！乞うご期待！！(※本番はAI生成した気の利いた文面が入ります)",
+            f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！(※本番はAI生成した気の利いた文面が入ります)"
         ]
         selected_option = st.radio("宣伝文候補を選択：", options, key="selected_ad_text")
 
