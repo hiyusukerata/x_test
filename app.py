@@ -14,7 +14,7 @@ HEADERS = {"Authorization": f"Bearer {BEARER_TOKEN}"}
 # --- API取得関数（キャッシュあり） ---
 @st.cache_data(ttl=3600)
 def get_user_info(username):
-    url = f"https://api.twitter.com/2/users/by/username/{username}?user.fields=public_metrics,description,name"
+    url = f"https://api.twitter.com/2/users/by/username/{username}?user.fields=public_metrics,description,name,profile_image_url"
     response = requests.get(url, headers=HEADERS)
 
     if response.status_code == 429:
@@ -115,13 +115,17 @@ with tabs[0]:
             user2 = data2["data"]
             metrics1 = user1["public_metrics"]
             metrics2 = user2["public_metrics"]
-
+        
             st.markdown("### 👤 アカウント基本情報")
-            df_info = pd.DataFrame({
-                "項目": ["アカウント名", "ユーザー名", "プロフィール文"],
-                username1: [user1["name"], username1, user1.get("description", "(bioなし)")],
-                username2: [user2["name"], username2, user2.get("description", "(bioなし)")]
-            })
+        
+            col1, col2 = st.columns(2)
+            for user, col, uname in zip([user1, user2], [col1, col2], [username1, username2]):
+                with col:
+                    st.image(user["profile_image_url"], width=64)
+                    st.markdown(f"**アカウント名**：{user['name']}")
+                    st.markdown(f"**ユーザー名**：@{uname}")
+                    st.markdown(f"**プロフィール文**：{user.get('description', '(bioなし)')}")
+
             st.dataframe(df_info, use_container_width=True, hide_index=True)
 
             st.markdown("---")
