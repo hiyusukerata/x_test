@@ -118,33 +118,18 @@ with tabs[0]:
         
             st.markdown("### 👤 アカウント基本情報")
 
-            df_info = pd.DataFrame({
-                "項目": ["アイコン", "アカウント名", "ユーザー名", "プロフィール文"],
-                username1: [
-                    f"![]({user1['profile_image_url']})",  # Markdown形式で画像
-                    user1["name"],
-                    username1,
-                    user1.get("description", "(bioなし)")
-                ],
-                username2: [
-                    f"![]({user2['profile_image_url']})",
-                    user2["name"],
-                    username2,
-                    user2.get("description", "(bioなし)")
-                ]
-            })
+            col1, col2 = st.columns(2)
             
-            # 表の「アイコン」列を画像として表示するため unsafe_allow_html=True で個別表示
-            for row_idx in range(len(df_info)):
-                if df_info.iloc[row_idx, 0].startswith("![]("):  # アイコン行だけ
-                    cols = st.columns(3)
-                    cols[0].markdown(f"**{df_info.iloc[row_idx, 0]}**", unsafe_allow_html=True)
-                    cols[1].markdown(df_info.columns[1])
-                    cols[2].markdown(df_info.columns[2])
-                    break
-            else:
-                # 通常の表を出す（他の行）
-                st.dataframe(df_info, use_container_width=True, hide_index=True)
+            with col1:
+                st.image(user1["profile_image_url"], width=80)
+                st.markdown(f"**{user1['name']}**  `@{username1}`")
+                st.markdown(user1.get("description", "(bioなし)"))
+            
+            with col2:
+                st.image(user2["profile_image_url"], width=80)
+                st.markdown(f"**{user2['name']}**  `@{username2}`")
+                st.markdown(user2.get("description", "(bioなし)"))
+
 
 
             st.markdown("---")
