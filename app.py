@@ -118,26 +118,20 @@ with tabs[0]:
     
             
             st.markdown("### 👤 アカウント基本情報")
-        
-            # アイコン付きプロフィールカード表示
+
             col1, col2 = st.columns(2)
         
-            with col1:
-                st.image(user1["profile_image_url"], width=64)
-                st.markdown(f"**{user1['name']}**")
-                st.markdown(f"@{username1}")
-            with col2:
-                st.image(user2["profile_image_url"], width=64)
-                st.markdown(f"**{user2['name']}**")
-                st.markdown(f"@{username2}")
+            def render_profile_card(user, username):
+                st.image(user["profile_image_url"], width=64)
+                st.markdown(f"**{user['name']}**")
+                st.markdown(f"@{username}", help="ユーザー名")
+                st.markdown(f"<div style='font-size:14px; color: #555;'>{user.get('description', '(bioなし)')}</div>", unsafe_allow_html=True)
         
-            # プロフィール文などの比較表
-            df_info = pd.DataFrame({
-                "項目": ["プロフィール文"],
-                username1: [user1.get("description", "(bioなし)")],
-                username2: [user2.get("description", "(bioなし)")]
-            })
-            st.dataframe(df_info, use_container_width=True, hide_index=True)
+            with col1:
+                render_profile_card(user1, username1)
+        
+            with col2:
+                render_profile_card(user2, username2)
         
             st.markdown("---")
 
