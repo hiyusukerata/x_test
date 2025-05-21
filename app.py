@@ -299,7 +299,7 @@ with tabs[2]:
             st.success("イベントを追加しました")
 
     # --- 宣伝文テンプレート ---
-st.markdown("### ✍ 宣伝文テンプレート（X投稿風デザイン）")
+st.markdown("### ✍ 宣伝文テンプレート（X投稿風UI）")
 
 if selected_date in all_events and all_events[selected_date]:
     event = all_events[selected_date][0]
@@ -313,55 +313,59 @@ if selected_date in all_events and all_events[selected_date]:
         f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
     ]
 
-    st.markdown("以下から投稿文を選択してください。")
+    st.markdown("以下の投稿テンプレートから選択してください：")
 
-    selected_option = None
-    for i, opt in enumerate(options):
-        with st.container():
-            st.markdown(
-                f"""
-                <div style="
-                    background-color: #ffffff;
-                    border: 1px solid #ccc;
-                    border-radius: 12px;
-                    padding: 16px;
-                    margin-bottom: 12px;
-                    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-                ">
-                    <p style="font-size: 16px; line-height: 1.6;">
-                        {opt}
-                    </p>
-                    <form action="" method="post">
-                        <button name="select" type="submit" value="{i}" style="
-                            background-color: #1DA1F2;
-                            color: white;
-                            border: none;
-                            border-radius: 6px;
-                            padding: 6px 12px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">この投稿文を選ぶ</button>
-                    </form>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-    # 選択を保持するための処理（Streamlit workaround）
+    # 選択用セッション状態
     if "selected_ad_index" not in st.session_state:
         st.session_state.selected_ad_index = None
-    if st.session_state.get("select"):
-        st.session_state.selected_ad_index = int(st.session_state.select)
 
+    for i, opt in enumerate(options):
+        is_selected = st.session_state.selected_ad_index == i
+        selected_style = "border: 2px solid #1DA1F2;" if is_selected else "border: 1px solid #ccc;"
+
+        st.markdown(
+            f"""
+            <div style="
+                {selected_style}
+                border-radius: 16px;
+                padding: 16px;
+                margin: 12px 0;
+                background-color: #fff;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            ">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png" width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
+                    <div style="font-weight: bold; font-size: 16px;">Good!Apps 店長</div>
+                </div>
+                <div style="font-size: 15px; line-height: 1.6;">{opt}</div>
+                <div style="color: #1DA1F2; font-size: 13px; margin-top: 12px;">
+                    🌍 すべてのユーザーが返信できます
+                </div>
+                <form action="" method="post">
+                    <button name="select_ad" type="submit" value="{i}" style="
+                        margin-top: 10px;
+                        background-color: #1DA1F2;
+                        color: white;
+                        border: none;
+                        padding: 6px 16px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        cursor: pointer;
+                    ">この投稿文を選ぶ</button>
+                </form>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # 選択結果を反映
+    if "select_ad" in st.session_state:
+        st.session_state.selected_ad_index = int(st.session_state.select_ad)
+
+    # --- 予約投稿設定UI ---
     if st.session_state.selected_ad_index is not None:
         selected_option = options[st.session_state.selected_ad_index]
-        st.success("投稿文を選択しました！")
-
-    if selected_option:
-        st.session_state.reservation_text = selected_option
-
-        # --- 予約投稿設定 ---
-        st.markdown("---")
         st.markdown("### ⏰ 予約投稿設定")
         default_time = dt.now() + timedelta(hours=1)
         col1, col2, col3, col4, col5 = st.columns(5)
@@ -382,7 +386,6 @@ if selected_date in all_events and all_events[selected_date]:
             st.session_state.reservation_text = selected_option
             st.session_state.reservation_time = post_time
 
-    # --- 予約確認表示 ---
     if st.session_state.get("reservation_check"):
         st.info(f"{st.session_state.reservation_time} に以下の投稿を予約しますか？")
         st.code(st.session_state.reservation_text)
