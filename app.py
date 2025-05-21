@@ -315,27 +315,29 @@ if selected_date in all_events and all_events[selected_date]:
 
     st.markdown("以下の投稿テンプレートから選択してください：")
 
-    # 選択状態の保持
     if "selected_ad_index" not in st.session_state:
         st.session_state.selected_ad_index = None
 
     for i, opt in enumerate(options):
         is_selected = st.session_state.selected_ad_index == i
-        selected_style = "border: 2px solid #1DA1F2;" if is_selected else "border: 1px solid #ccc;"
+        border_style = "2px solid #1DA1F2" if is_selected else "1px solid #ccc"
 
+        # HTMLカード部分
         st.markdown(
             f"""
             <div style="
-                {selected_style}
+                border: {border_style};
                 border-radius: 16px;
                 padding: 16px;
-                margin: 12px 0;
+                margin-bottom: 16px;
                 background-color: #fff;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                 font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                position: relative;
             ">
                 <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                    <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png" width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
+                    <img src="https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
+                         width="40" height="40" style="border-radius: 50%; margin-right: 10px;">
                     <div style="font-weight: bold; font-size: 16px;">Good!Apps 店長</div>
                 </div>
                 <div style="font-size: 15px; line-height: 1.6;">{opt}</div>
@@ -346,7 +348,25 @@ if selected_date in all_events and all_events[selected_date]:
             """,
             unsafe_allow_html=True
         )
-        if st.button(f"この投稿文を選ぶ", key=f"select_button_{i}"):
+
+        # ボタンは直後に置く（見た目はカード内にあるように見せる）
+        button_style = """
+            <style>
+            div[data-testid="stButton"] button {
+                background-color: #1DA1F2;
+                color: white;
+                border: none;
+                border-radius: 9999px;
+                padding: 6px 20px;
+                font-size: 14px;
+                margin-top: -60px;
+                margin-bottom: 40px;
+                float: right;
+            }
+            </style>
+        """
+        st.markdown(button_style, unsafe_allow_html=True)
+        if st.button("この投稿文を選ぶ", key=f"select_button_{i}"):
             st.session_state.selected_ad_index = i
             st.success("投稿文を選択しました！")
 
