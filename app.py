@@ -299,21 +299,66 @@ with tabs[2]:
             st.success("イベントを追加しました")
 
     # --- 宣伝文テンプレート ---
-    st.markdown("---")
-    st.markdown("### ✍ 宣伝文テンプレート（選択日対応）")
+st.markdown("### ✍ 宣伝文テンプレート（X投稿風デザイン）")
 
-    if selected_date in all_events and all_events[selected_date]:
-        event = all_events[selected_date][0]
-        dt_obj = dt.strptime(selected_date, "%Y-%m-%d")
-        month_str = dt_obj.strftime("%m")
-        day_str = dt_obj.strftime("%d")
+if selected_date in all_events and all_events[selected_date]:
+    event = all_events[selected_date][0]
+    dt_obj = dt.strptime(selected_date, "%Y-%m-%d")
+    month_str = dt_obj.strftime("%m")
+    day_str = dt_obj.strftime("%d")
 
-        options = [
-            f"{month_str}月{day_str}日は{event}！みなさまのご来店をお待ちしております。(※本番はAI生成した気の利いた文面が入ります)",
-            f"{month_str}月{day_str}日は{event}！乞うご期待！！(※本番はAI生成した気の利いた文面が入ります)",
-            f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！(※本番はAI生成した気の利いた文面が入ります)"
-        ]
-        selected_option = st.radio("宣伝文候補を選択：", options, key="selected_ad_text")
+    options = [
+        f"{month_str}月{day_str}日は{event}！みなさまのご来店をお待ちしております。",
+        f"{month_str}月{day_str}日は{event}！乞うご期待！！",
+        f"{month_str}月{day_str}日は{event}！いつもにまして店長気合い入ってます！ぜひご来店ください！"
+    ]
+
+    st.markdown("以下から投稿文を選択してください。")
+
+    selected_option = None
+    for i, opt in enumerate(options):
+        with st.container():
+            st.markdown(
+                f"""
+                <div style="
+                    background-color: #ffffff;
+                    border: 1px solid #ccc;
+                    border-radius: 12px;
+                    padding: 16px;
+                    margin-bottom: 12px;
+                    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+                ">
+                    <p style="font-size: 16px; line-height: 1.6;">
+                        {opt}
+                    </p>
+                    <form action="" method="post">
+                        <button name="select" type="submit" value="{i}" style="
+                            background-color: #1DA1F2;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            padding: 6px 12px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">この投稿文を選ぶ</button>
+                    </form>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    # 選択を保持するための処理（Streamlit workaround）
+    if "selected_ad_index" not in st.session_state:
+        st.session_state.selected_ad_index = None
+    if st.session_state.get("select"):
+        st.session_state.selected_ad_index = int(st.session_state.select)
+
+    if st.session_state.selected_ad_index is not None:
+        selected_option = options[st.session_state.selected_ad_index]
+        st.success("投稿文を選択しました！")
+
+    if selected_option:
+        st.session_state.reservation_text = selected_option
 
         # --- 予約投稿設定 ---
         st.markdown("---")
